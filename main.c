@@ -1,9 +1,12 @@
 // dynamic 
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 
-uint32_t main (void)
+#include "lib_inc.h"
+
+int main (void)
 {
 	inc_t inked[2]; // malloc this inside the init function
 	inc_init(&inked[0]);
@@ -26,10 +29,10 @@ uint32_t main (void)
 		// 
 
 	// compute the arrays
-	float result = (inked[0]->func_ptr)(3); // result should be 4.0
+	float result = (inked[0].func_ptr)(&inked[0], 3); // result should be 4.0
 
 	// output
-	printf("result: %d\n\r", result);
+	printf("result: %f\n\r", result);
 
 	return 0;
 }
