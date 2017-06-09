@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 typedef struct inc_{
 	// struct contains it's own function pointer
 	float (*func_ptr)( struct inc_* self, float in );
