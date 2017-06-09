@@ -29,7 +29,11 @@ int main (void)
 		// 
 
 	// compute the arrays
-	float result = (inked[0].func_ptr)(&inked[0], 3); // result should be 4.0
+	float result;
+	result = (inked[0].func_ptr)(&inked[0], result); // result should be 4.0
+	result = (inked[0].func_ptr)(&inked[0], result); // result should be 4.0
+
+	result = (inked[1].func_ptr)(&inked[1], result); // result should be 4.0
 
 	// output
 	printf("result: %f\n\r", result);
