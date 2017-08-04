@@ -1,0 +1,6 @@
+fpg
+.DS_Store
+*.o
+*.bin
+*.elf
+*.hex
