@@ -1,10 +1,11 @@
-module_name = fpg
+module_name = goth
 
 WRLIB=../wrLib
 WRDSP=../wrDsp
 
 CC = gcc
 LD = gcc
+GHC = ghc
 
 SRC = main.c \
       dsp_block.c \
@@ -12,8 +13,19 @@ SRC = main.c \
       $(WRDSP)/wrFilter.c \
       $(WRDSP)/wrOscSine.c
 
+# NB! files must be listed bottom-up (main is last)
+# otherwise dependencies aren't found
+HMAIN = Hcli
+HSRC = FTypes.hs \
+       Dict.hs \
+       $(HMAIN).hs
+
 OBJDIR = .
 OBJS = $(SRC:%.c=$(OBJDIR)/%.o)
+
+HOBJDIR = .
+HOBJS = $(HSRC:%.hs=$(OBJDIR)/%.hi)
+HOBJS += $(HSRC:%.hs=$(OBJDIR)/%.o)
 
 EXECUTABLE = $(module_name)
 
@@ -21,21 +33,21 @@ INCLUDES = \
     -I$(WRLIB)/ \
     -I$(WRDSP)/
 
-CFLAGS = -lm -lc -lsoundio -D ARCH_LINUX=1
-CFLAGS += $(DEFS) -I. -I./ $(INCLUDES)
+HsFFI=/usr/lib/ghc/include/
+
+HCINCLUDES = -I$(HsFFI)
+
+HCFLAGS = -lm -lc -lsoundio -D
+HCFLAGS += $(DEFS) -I. -I./ $(INCLUDES) $(HCINCLUDES)
+
 LDFLAGS =
 LIBS = -lm -lc -lsoundio
 
-all: $(OBJS)
-	touch $(EXECUTABLE)
-	rm ./$(EXECUTABLE)
-	$(CC) $(LIBS) $(OBJS) $(CFLAGS) -o $(EXECUTABLE) -g
-
-#	$(LD) -g $(LDFLAGS) $(OBJS) $(LIBS) -o $@
-
-%.o: %.c
-	$(CC) -ggdb $(CFLAGS) -c $< -o $@
-
+all:
+	@touch $(EXECUTABLE)
+	@rm ./$(EXECUTABLE)
+	ghc -c -O $(HCFLAGS) $(HSRC)
+	ghc --make -no-hs-main -optc-O $(HCFLAGS) $(SRC) $(HMAIN) -o $(EXECUTABLE)
 
 clean:
-	rm $(OBJS) $(EXECUTABLE)
+	rm $(OBJS) $(EXECUTABLE) $(HOBJS) $(HMAIN)_stub.h

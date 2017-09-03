@@ -1,0 +1,33 @@
+// function pointer graph
+// basic dsp project for navigating a dynamic dsp graph
+
+// stage one
+wrGraph is initialized with no nodes
+
+the graph will be manipulated via the command line
+essentially going to write a tiny language
+might as well roll a forth in there haha
+
+there should be a generalized form in jk of getting CLI strings into the block
+
+// example lines
+add <module type>
+    print id
+rm <id>
+cat <id:output> <id:input>
+get <id:param>
+    print val of param
+set <id:param> <val>
+cut <id:output> <id:input>
+.S
+    print <state>
+
+// .S
+special print function that displays the whole graph
+each module listed by id & shows type (and params?)
+modules grouped by processing order
+processing paths are colour coded from source
+each node could display CPU percent
+    cpu is calculated from assembly output
+any calcs optimized out should be noted (grey?)
+

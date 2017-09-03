@@ -5,6 +5,7 @@
  * See http://opensource.org/licenses/MIT
  */
 
+
 #include <soundio/soundio.h>
 
 #include <stdio.h>
@@ -14,6 +15,15 @@
 #include <math.h>
 
 #include "main.h"
+
+
+// haskell test
+#include <HsFFI.h>
+#ifdef __GLASGOW_HASKELL__
+#include "Hcli_stub.h"
+extern void __stginit_Hcli(void);
+#endif
+
 
 static int usage(char *exe) {
     fprintf(stderr, "Usage: %s [options]\n"
@@ -107,13 +117,6 @@ static void write_callback(struct SoundIoOutStream *outstream, int frame_count_m
 
 #endif /* end sample process */
 
-        for (int frame = 0; frame < frame_count; frame += 1) {
-            double sample = sin((seconds_offset + frame * seconds_per_frame) * radians_per_second);
-            for (int channel = 0; channel < layout->channel_count; channel += 1) {
-                write_sample(areas[channel].ptr, sample);
-                areas[channel].ptr += areas[channel].step;
-            }
-        }
         seconds_offset = fmod(seconds_offset + seconds_per_frame * frame_count, 1.0);
 
         if ((err = soundio_outstream_end_write(outstream))) {
@@ -144,6 +147,8 @@ int main(int argc, char **argv) {
     char *stream_name = NULL;
     double latency = 0.0;
     int sample_rate = 0;
+
+
     for (int i = 1; i < argc; i += 1) {
         char *arg = argv[i];
         if (arg[0] == '-' && arg[1] == '-') {
@@ -278,11 +283,10 @@ int main(int argc, char **argv) {
 
     fprintf(stderr, "Software latency: %f\n", outstream->software_latency);
     fprintf(stderr,
-            "'p\\n' - pause\n"
-            "'u\\n' - unpause\n"
-            "'P\\n' - pause from within callback\n"
-            "'c\\n' - clear buffer\n"
-            "'q\\n' - quit\n");
+            "'.s'   - print graph layout\n"
+            "'get'  - print the value of named param\n"
+            "'set'  - set the value of named param\n"
+            "':q'   - quit\n");
 
     if (outstream->layout_error)
         fprintf(stderr, "unable to set channel layout: %s\n", soundio_strerror(outstream->layout_error));
@@ -292,29 +296,80 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+
+
+
     for (;;) {
         soundio_flush_events(soundio);
-        int c = getc(stdin);
-        if (c == 'p') {
-            fprintf(stderr, "pausing result: %s\n",
-                    soundio_strerror(soundio_outstream_pause(outstream, true)));
-        } else if (c == 'P') {
-            want_pause = true;
-        } else if (c == 'u') {
-            want_pause = false;
-            fprintf(stderr, "unpausing result: %s\n",
-                    soundio_strerror(soundio_outstream_pause(outstream, false)));
-        } else if (c == 'c') {
-            fprintf(stderr, "clear buffer result: %s\n",
-                    soundio_strerror(soundio_outstream_clear_buffer(outstream)));
-        } else if (c == 'q') {
+
+/*
+        char cli_stdin[256];
+        char cli_response[256];
+        // clear the buffers each loop
+        memset( cli_stdin, 0, 256 );
+        memset( cli_response, 0, 256 );
+
+        // should update fgets() to getline() for handling of NULLs
+        fprintf( stderr
+               , "%s\n"
+               , module_cli( fgets ( cli_stdin
+                                   , 256
+                                   , stdin
+                                   )
+                           , cli_response
+                           )
+               );
+        const char* cli_quit  = ":q";
+        const char  cli_q_len = strlen(cli_quit);
+        if( 0 == memcmp( cli_stdin
+                       , cli_quit
+                       , cli_q_len ) ){
             break;
-        } else if (c == '\r' || c == '\n') {
-            // ignore
-        } else {
-            fprintf(stderr, "Unrecognized command: %c\n", c);
         }
-    }
+*/
+
+break;
+   }
+
+
+    hs_init(&argc, &argv);
+#ifdef __GLASGOW_HASKELL__
+    hs_add_root(__stginit_Hcli);
+#endif
+
+// after hs is init we should run the first part of intepreter
+// this just inits the state w dictionary.
+//
+// that function returns IO () (FunPtr (IO))
+// which is a fnptr that can be used to call back into haskell
+//
+// thus at start of for() loop we run interpreter
+// it returns fnptr to it's continuation
+// then we iterate with printf outside
+//
+// how to get the interpretted info out of haskell though if we're returning fnptr?
+// can use a IO() fn to access the outside world?
+//
+//
+// if all of this fails, we just don't maintain state inside of haskell.
+// we just use it as a helpful interpreter with pattern matching
+// which can format our commands for us
+// basically it will return easily parsed fn pointers & arguments
+// preferably in some generic wrapper so parsing in C is super simple
+//
+// try and get interop working, so haskell can query (in c) address of structs
+// and perhaps even trigger the CLI fns directly
+//
+//
+// see: https://www.haskell.org/onlinereport/haskell2010/haskellch8.html#x15-1490008
+// particularly 'Dynamic Wrapper' 2/3rds down the page
+
+    cli_hs();
+    hs_exit(); // end haskell stub
+
+    fprintf( stderr
+           , "leaving..\n"
+           );
 
     soundio_outstream_destroy(outstream);
     soundio_device_unref(device);
