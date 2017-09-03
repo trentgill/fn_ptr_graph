@@ -65,6 +65,11 @@ fDOT s = s { datastack = stack_pop( datastack s  )
            }
          where getPancake (cake:cakes) = show(cake) ++ " pancake!"
 
+fDOTG :: FState -> FState
+fDOTG s = s { output_string = output_string s
+                ++ "call to c and print the whole graph!"
+                ++ "\n"
+            }
 
 
 -- constants
