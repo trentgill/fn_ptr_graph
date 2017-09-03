@@ -1,6 +1,7 @@
-fpg
+goth
 .DS_Store
 *.o
 *.bin
 *.elf
 *.hex
+*.hi
