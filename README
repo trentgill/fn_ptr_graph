@@ -1,6 +1,84 @@
 // function pointer graph
 // basic dsp project for navigating a dynamic dsp graph
 
+// roadmap
+- makefile to install the exe (so don't have to type "./")
+- execute FCFn via the return the stack
+- load a forth composition via .4th file
+- maybe datatype for abort messaging
+- handle nums in compile mode
+- string handling with ",
+- if/else handling
+- DOES>
+
+
+
+the whole point of this project is (initially) to allow rapid development of dsp modules.
+the dsp is already running just fine, but there's no way to change the graph or parameters
+both of these require recompilation.
+
+reconstructing the graph is difficult because it implies a lot more abstraction
+initially just need a method to change parameters.
+
+using hoth as the scripting language, we need to know how to get & set parameters
+
+-- one command should just print a list of all params & their args
+-- then a separate command should take a list and apply it
+
+eg: wrOscSine library:
+has a time setter
+    a reset command
+
+only needs to display time
+
+
+
+
+
+
+// hoth words
+list all modules:       M.S
+list this module:       &module MLIST
+get named param:        &module <param_name> MGET
+set param to val:       &module <param_name> <value> MSET
+
+&module will begin as the memory address
+    later can convert it to a name "SINE:<ix>"
+
+
+
+// 171002
+haskell needs to know available module options
+- names (ie string to identify)
+- fnptr to the init function for that type
+therefore c needs to provide a getter fn that returns a 2d array
+
+this c fn
+
+
+
+
+
+
+
+// /////////////////////////
+// some notes from ezra
+/*
+NEW DIVR - replies with 14.DIVR or something
+INS 14 replies A B B_TRIG ?
+OUTS 14 replies VAL R ?
+SHOW OP 13 replies (say) 13.FADE [A B X] [VAL] ?
+CONNECT 13.VAL 14.B
+SET 13.B_TRIG 1 ?
+*/
+
+
+
+
+
+
+
+
 // stage one
 wrGraph is initialized with no nodes
 

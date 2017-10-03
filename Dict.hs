@@ -1,6 +1,7 @@
 module Dict where
 
 import FTypes
+import DSP
 
 -- helper functions
 stack_op :: (FDataStack -> FDataStack) -> FState -> FState
@@ -9,35 +10,113 @@ stack_op f s = s { datastack = f (datastack s) }
 stack_pop :: FDataStack -> FDataStack
 stack_pop = drop 1
 
+output_append :: FOutput -> FState -> FState
+output_append str s = s { output_string = (output_string s) ++ str }
+
 -- DICTIONARY
+
+-- to be fixed / changed
+-- WORD must discard leading whitespace
+
+-- to be added
+-- FORGET (forgets all words defined since the named word)
+-- ." (prints until it encounters ")
+-- CR (prints a carriage return)
+-- SPACE (prints a space)
+-- SPACES (prints n spaces)
+-- MOD (n1 n2 -- rem)
+-- /MOD (n1 n2 -- rem quot)
+-- INCLUDE (loads & interprets a text file from disk)
+-- = < > 0= 0< 0>
+-- IF ELSE THEN
+-- INVERT (inverts a flag)
+-- ?DUP (dupes top stack value only if it's a TRUE flag)
+-- ABORT" (if flag true, clear stack, print name of last interp'd word)
+-- ?STACK (true if stack is EMPTY)
+--
+-- 1+
+-- 1-
+-- 2+
+-- 2-
+-- 2* (left shift)
+-- 2/ (right shift)
+--
+-- ABS
+-- NEGATE
+-- >R and R> (move from stack to rstack then back)
+-- */ (multiplies then divides. for fractions)
 
 -- map of native functions
 -- must manually add new native words here :/
 
-native_dict = [ (".S"   ,False, FFn fDOTESS   )
-              , ("."    ,False, FFn fDOT      )
-              , ("BL"   ,False, FFn fBL       )
-              , ("*"    ,False, FFn fSTAR     )
-              , ("+"    ,False, FFn fADD      )
-              , ("-"    ,False, FFn fSUB      )
-              , ("/"    ,False, FFn fDIV      )
-              , ("MAX"  ,False, FFn fMAX      )
-              , ("MIN"  ,False, FFn fMIN      )
-              , ("DUP"  ,False, FFn fDUP      )
-              , ("DROP" ,False, FFn fDROP     )
-              , ("SWAP" ,False, FFn fSWAP     )
-              , ("OVER" ,False, FFn fOVER     )
-              , ("ROT"  ,False, FFn fROT      )
-              , ("NIP"  ,False, FFn fNIP      )
-              , ("TUCK" ,False, FFn fTUCK     )
-              , ("WORD" ,False, FFn fWORD     )
-              , ("FIND" ,False, FFn fFIND     )
-              , ("["    ,True , FFn fLEFTBRAK )
-              , ("]"    ,False, FFn fRITEBRAK )
-              , (":"    ,False, FCFn fCOLON   )
-              , (";"    ,True , FCFn fSEMIC   )
-              , (":q"   ,True , FFn fCOLONQ   )
+native_dict = [ (".S"       ,Not  ,FFn  fDOTESS   )
+              , ("."        ,Not  ,FFn  fDOT      )
+              , ("BL"       ,Not  ,FFn  fBL       )
+              , ("WORD"     ,Not  ,FFn  fWORD     )
+              , ("FIND"     ,Not  ,FFn  fFIND     )
+              , ("["        ,Imm  ,FFn  fLEFTBRAK )
+              , ("]"        ,Not  ,FFn  fRITEBRAK )
+              , ("("        ,Imm  ,FFn  fPAREN    )
+              , (":"        ,Not  ,FCFn fCOLON    )
+              , (";"        ,Imm  ,FCFn fSEMIC    )
+              , ("IMMEDIATE",Not  ,FFn  fIMMEDIATE)
+              , ("BL"       ,Not  ,FFn  fBL       )
+              , ("WORD"     ,Not  ,FFn  fWORD     )
+              , ("CREATE"   ,Not  ,FFn  fCREATE   )
+              , ("DROP"     ,Not  ,FFn  fDROP     )
+              , ("*"        ,Not  ,FFn  fSTAR     )
+              , ("+"        ,Not  ,FFn  fADD      )
+              , ("-"        ,Not  ,FFn  fSUB      )
+              , ("/"        ,Not  ,FFn  fDIV      )
+              , ("MAX"      ,Not  ,FFn  fMAX      )
+              , ("MIN"      ,Not  ,FFn  fMIN      )
+              , ("DUP"      ,Not  ,FFn  fDUP      )
+              , ("SWAP"     ,Not  ,FFn  fSWAP     )
+              , ("ROT"      ,Not  ,FFn  fROT      )
+              , ("BYE"      ,Not  ,FFn  fCOLONQ   )
+              , (".s"       ,Not  ,FFn  mDOTESS   ) -- specifics for dsp ctrl
+              , ("new"      ,Not  ,FFn  mNEW      )
+              , ("ins"      ,Not  ,FFn  mINS      )
+              , ("outs"     ,Not  ,FFn  mOUTS     )
+              , ("pars"     ,Not  ,FFn  mPARS     )
+              , ("list"     ,Not  ,FFn  mLIST     )
+              , ("con"      ,Not  ,FFn  mCON      )
+              , ("dis"      ,Not  ,FFn  mDIS      )
+              , ("get"      ,Not  ,FFn  mGET      )
+              , ("set"      ,Not  ,FFn  mSET      )
               ]
+
+-- initial dsp-graph-words
+mDOTESS :: FState -> FState
+mDOTESS = fDOT . stack_op( (FNum dspList) : )
+
+mNEW :: FState -> FState
+mNEW = output_append("takes mod-type. returns id\n")
+
+mINS :: FState -> FState
+mINS = output_append("takes mod id. lists inputs\n")
+
+mOUTS :: FState -> FState
+mOUTS = output_append("takes mod id. lists outputs\n")
+
+mPARS :: FState -> FState
+mPARS = output_append("takes mod id. lists params\n")
+
+mLIST :: FState -> FState
+mLIST = output_append("takes mod id. lists ins, outs, params\n")
+
+mCON :: FState -> FState
+mCON = output_append("adds patch between 2 endpoints. lists patch id\n")
+
+mDIS :: FState -> FState
+mDIS = output_append("takes patch id. returns ok\n")
+
+mGET :: FState -> FState
+mGET = output_append("takes mod.par. returns vel\n")
+
+mSET :: FState -> FState
+mSET = output_append("takes mod.par & val. retursn ok\n")
+
 
 -- force quit
 fCOLONQ :: FState -> FState
@@ -45,31 +124,26 @@ fCOLONQ s = s { quit_flag = True }
 
 -- printing
 fDOTESS :: FState -> FState
-fDOTESS s@(FState {datastack=[]}) =
-        s { output_string = output_string s
-          ++ "stack's empty mate"
-          ++ "\n" }
-fDOTESS s = s { output_string = output_string s
-                 ++ "<len: "
-                 ++ (show $ length (datastack s))
-                 ++ "> "
-                 ++ (show (datastack s))
-                 ++ " nice stack =]"
-                 ++ "\n" }
+fDOTESS s@(FState {datastack=[]}) = output_append("stack's empty mate\n") s
+fDOTESS s = output_append(  "<len: "
+                         ++ (show $ length (datastack s))
+                         ++ "> "
+                         ++ (show (datastack s))
+                         ++ " {"
+                         ++ (show (compile_flag s))
+                         ++ "} nice stack =]\n"
+                         ) s
 
 fDOT :: FState -> FState
-fDOT s@(FState {datastack=[]}) =
-        s { output_string = "stack's empty mate" }
-fDOT s = s { datastack = stack_pop( datastack s  )
-           , output_string = output_string s ++ getPancake( datastack s ) ++ "\n"
-           }
-         where getPancake (cake:cakes) = show(cake) ++ " pancake!"
+fDOT s@(FState {datastack=[]}) = output_append("stack's empty mate\n") s
+fDOT s = fDROP . output_append(getPancake(datastack s)) $ s
+         where
+            getPancake :: FDataStack -> String
+            getPancake (cake:cakes) = show(cake) ++ " pancake!\n"
 
 fDOTG :: FState -> FState
-fDOTG s = s { output_string = output_string s
-                ++ "call to c and print the whole graph!"
-                ++ "\n"
-            }
+fDOTG = output_append( "call to c and print the whole graph!\n" )
+
 
 
 -- constants
@@ -122,9 +196,6 @@ fSWAP = stack_op(dSwap)
           dSwap (tos:[])      = tos:[]
           dSwap (tos:nxt:stk) = nxt:tos:stk
 
-fOVER :: FState -> FState
-fOVER = fTUCK . fSWAP
-
 fROT :: FState -> FState
 fROT = stack_op(dRot)
     where dRot []                = []
@@ -132,84 +203,134 @@ fROT = stack_op(dRot)
           dRot (tos:nxt:[])      = tos:nxt:[]
           dRot (tos:nxt:thd:stk) = thd:tos:nxt:stk
 
-fNIP :: FState -> FState
-fNIP = fDROP . fSWAP
-
-fTUCK :: FState -> FState
-fTUCK = fSWAP . fROT . fDUP
-
-
 
 --quit loop
+--here is were ABORT error checking should occur
 fQUIT :: FState -> FState
-fQUIT s@(FState {input_string = []}) = s
+fQUIT s@(FState {abort_flag   = True})  = output_append("abort!\n") s {abort_flag = False}
+fQUIT s@(FState {input_string = []}) = output_append("ok.\n") s
 fQUIT s@(FState {compile_flag = True }) = fQUIT . fCOMPILE $ s
 fQUIT s@(FState {compile_flag = False}) = fQUIT . fINTERPRET $ s
 
 
 --interpret and parse
 fINTERPRET :: FState -> FState
-fINTERPRET = fEXECUTE . fDROP . fFIND . fWORD . fBL
+fINTERPRET = fEXECUTE . fFIND . fWORD . fBL
 
+-- problem here is EXECUTE now expects a flag on the stack before the
+-- function. probably a good time to think about composite functions acting
+-- via the return stack anyway... will currently spoof it with
+-- a non-immediate flag.
 fEXECUTE :: FState -> FState
-fEXECUTE s@(FState {datastack = (FNum x:xs)}) = s
-fEXECUTE s@(FState {datastack = (FFn  x:xs)}) = x s {
-    datastack = stack_pop $ datastack s }
-fEXECUTE s@(FState {datastack = (FCFn x:xs)}) =
-    composite x s {datastack = stack_pop $ datastack s}
-    where composite :: [FStackItem] -> FState -> FState
-          composite ([])   st = st
-          composite (f:fs) st = composite fs $ fEXECUTE st {
-            datastack = f : datastack st }
+fEXECUTE s@(FState {datastack = (FIWord NA:_:_)}) = stack_op(isnum)
+                                                  . fDROP
+                                                  $ s
+    where
+        isnum :: FDataStack -> FDataStack
+        isnum (FStr "":xs) = xs --ignore trailing whitespace
+        isnum (FStr  x:xs) = (FNum (read x) : xs)
+--        isnum (FStr x:xs)   = ((numMaybe x) : xs)
+--        where
+--            numMaybe :: FStr -> FStackItem
+--            numMaybe _ = (FNum 3)
+fEXECUTE s@(FState {datastack = (_:FFn x:_)}) = x
+                                              . fDROP
+                                              . fDROP
+                                              $ s
+fEXECUTE s@(FState {datastack = (_:FCFn x:_)}) = composite x
+                                               . fDROP
+                                               . fDROP
+                                               $ s
+    where
+        composite :: [FStackItem] -> FState -> FState
+        composite ([])   st = st
+        composite (f:fs) st = composite fs
+                            . fEXECUTE
+                            . stack_op(FIWord Not :)
+                            . stack_op(f :)
+                            $ st
+fEXECUTE s = fDROP $ s { abort_flag = True} --set out string?
 
 -- composite is ENTER
--- 151 is EXIT
+-- composite w [] is EXIT
 
+-- nb! if there's a leading space in a phrase, will push the empty list to
+-- stack :/
 fWORD :: FState -> FState
-fWORD s = s { datastack = (FStr word):(stack_pop $ datastack s)
-            , input_string = str' }
-    where word  = takeWhile (/= delim) (input_string s)
-          str'  = drop (1 + length word) (input_string s)
-          delim = getChar (datastack s)
-          getChar (FStr c:stk) = head c
+fWORD s = stack_op(FStr word :)
+        . fDROP
+        $ s { input_string = str' }
+    where
+        word  = takeWhile (/= delim)
+                $ dropWhile (== delim)
+                $ input_string s
+        takeS = takeWhile (== delim) $ input_string s
+        str'  = drop (1 + length word + length takeS)
+                     (input_string s)
+        delim = getChar (datastack s)
+        getChar (FStr c:stk) = head c
 
+-- nb: could also be a stack op (just pass (dict s) as arg)
 fFIND :: FState -> FState
 fFIND s = s { datastack = dFIND (datastack s) (dictionary s)  }
-    where dFIND [] _          = []
-          dFIND (FStr x:xs) d = (matchFlag):(matchDict):xs
-            where matchIt :: [FStackItem]
-                  matchIt = [ fn | (name, flag, fn) <- d
-                                 , name == x ]
-                  matchDict = case matchIt of
-                            []  -> FNum (read x)
+    where dFIND [] _          = (FIWord NA):(FCFn []):[]
+          dFIND (FStr x:xs) d = (matchImm):(matchDict):xs
+            where
+                matchD :: [FStackItem]
+                matchD = [ fn | (name, imm, fn) <- d
+                              , name == x ]
+                matchDict = case matchD of
+                            []  -> FStr x          --echo
                             fun -> head fun
-                  matchF :: [FCFlag]
-                  matchF = [ flag | (name, flag, fn) <- d
-                                  , name == x ]
-                  matchFlag = case matchF of
-                            []  -> FCFlag False
-                            fon -> FCFlag (head fon)
+                matchI :: [FIWord]
+                matchI = [ imm | (name, imm, fn) <- d
+                               , name == x ]
+                matchImm = case matchI of
+                           []  -> FIWord NA      --not found
+                           fon -> FIWord (head fon)
 
 --compilation
 fCOMPILE :: FState -> FState
 fCOMPILE = fCEXE . fFIND . fWORD . fBL
 
 fCEXE :: FState -> FState
-fCEXE s@(FState {datastack = (FCFlag True:xs)}) =
-    fEXECUTE . fDROP $ s
-fCEXE s@(FState {datastack = (x:FNum xx:xs)}) =
-    fDROP $ s
-fCEXE s =
-    fCOMPILEC . fDROP $ s
+fCEXE s@(FState {datastack = (FIWord Imm:_)}) = fEXECUTE $ s
+fCEXE s@(FState {datastack = (_:FStr "":_)})  = fDROP . fDROP $ s
+fCEXE s@(FState {datastack = (_:FStr x:_)})   = fCOMPILEN
+                                              . fDROP
+                                              $ s
+    -- need to compile to dictionary!
+    -- also check if it can be numberized, else ABORT"
+fCEXE s                                       = fCOMPILEC
+                                              . fDROP
+                                              $ s
 
 fCOMPILEC :: FState -> FState
 fCOMPILEC s@(FState {dictionary = (x:xs)}) =
-    s { dictionary = (compileTo x):xs
-      , datastack = stack_pop $ datastack s}
-    where compileTo :: FDictEntry -> FDictEntry
+      fDROP $ s { dictionary = (compileTo x):xs }
+      where
+          compileTo :: FDictEntry -> FDictEntry
           compileTo (s, f, FCFn x) =
               (s, f, FCFn (x ++ [newd]))
+          compileTo (s, f, FFn x) =
+              (s, f, FCFn ([FFn x] ++ [newd]))
+              -- was a one element dict entry. now a composite
           newd = head $ datastack s
+
+-- does this also need "" protection like fEXECUTE
+-- really need to improve the parser in WORD!
+fCOMPILEN :: FState -> FState
+fCOMPILEN s@(FState {dictionary = (x:xs)}) =
+      fDROP $ s { dictionary = (compileTo x):xs }
+      where
+          compileTo :: FDictEntry -> FDictEntry
+          compileTo (st, f, FCFn x) =
+              (st, f, FCFn (x ++ [newd $ head $ datastack s]))
+          compileTo (st, f, FFn x) =
+              (st, f, FCFn ([FFn x] ++ [newd $ head $ datastack s]))
+              -- was a one element dict entry. now a composite
+          newd :: FStackItem -> FStackItem
+          newd (FStr x) = (FNum (read x))
 
 fLEFTBRAK :: FState -> FState
 fLEFTBRAK s = s { compile_flag = False }
@@ -219,14 +340,21 @@ fRITEBRAK s = s { compile_flag = True }
 
 fCREATE :: FState -> FState
 fCREATE s@(FState {datastack = (FStr name:xs)}) =
-    s { dictionary = coWord : dictionary s
-      , datastack  = stack_pop $ datastack s }
-    where coWord :: FDictEntry
-          coWord = ( name
-                   , False
-                   , FCFn [] )
+    fDROP $ s { dictionary = coWord : dictionary s }
+    where
+        coWord :: FDictEntry
+        coWord = ( name
+                 , Not
+                 , FCFn [] )
 
 -- IMMEDIATE
+fIMMEDIATE :: FState -> FState
+fIMMEDIATE s@(FState {dictionary = (x:xs)}) =
+        s { dictionary = (i_flag x) : xs }
+        where
+            i_flag :: FDictEntry -> FDictEntry
+            i_flag (n, _, fn) = (n, Imm, fn)
+
 fPAREN :: FState -> FState
 fPAREN = fDROP . fWORD . stack_op(FStr ")" :)
 
@@ -240,33 +368,13 @@ fPAREN = fDROP . fWORD . stack_op(FStr ")" :)
 
 --COMPOSITE WORDS
 --hand compiled
---
---note the runtime compilation example of CUBED
---after compilation works, should create a transformer
---that does the cubWord elements to avoid repetition
---
---after that works, can refactor to allow words to be
---entered as text strings that use the compilation step
---to add them to dictionary at haskell-compile time
 
-
-fCOLON :: [FStackItem]
+fCOLON :: FCFn
 fCOLON = [ FFn fBL
          , FFn fWORD
          , FFn fRITEBRAK
-         , FFn fCREATE ]
+         , FFn fCREATE
+         ]
 
-fSEMIC :: [FStackItem]
+fSEMIC :: FCFn
 fSEMIC = [ FFn fLEFTBRAK ]
-
---runtime compilation
-addCubed :: FState -> FState
-addCubed s = s { dictionary = cubWord : dictionary s }
-    where cubWord :: FDictEntry
-          cubWord = ( "CUBED"
-                    , False
-                    , FCFn [ FFn fDUP
-                           , FFn fDUP
-                           , FFn fSTAR
-                           , FFn fSTAR])
-

@@ -26,15 +26,15 @@ extern void __stginit_Hcli(void);
 
 
 static int usage(char *exe) {
-    fprintf(stderr, "Usage: %s [options]\n"
-            "Options:\n"
-            "  [--backend dummy|alsa|pulseaudio|jack|coreaudio|wasapi]\n"
-            "  [--device id]\n"
-            "  [--raw]\n"
-            "  [--name stream_name]\n"
-            "  [--latency seconds]\n"
-            "  [--sample-rate hz]\n"
-            , exe);
+//    fprintf(stderr, "Usage: %s [options]\n"
+//            "Options:\n"
+//            "  [--backend dummy|alsa|pulseaudio|jack|coreaudio|wasapi]\n"
+//            "  [--device id]\n"
+//            "  [--raw]\n"
+//            "  [--name stream_name]\n"
+//            "  [--latency seconds]\n"
+//            "  [--sample-rate hz]\n"
+//            , exe);
     return 1;
 }
 
@@ -237,7 +237,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    fprintf(stderr, "Output device: %s\n", device->name);
+//    fprintf(stderr, "Output device: %s\n", device->name);
 
     if (device->probe_error) {
         fprintf(stderr, "Cannot probe device: %s\n", soundio_strerror(device->probe_error));
@@ -281,12 +281,19 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    fprintf(stderr, "Software latency: %f\n", outstream->software_latency);
+//    fprintf(stderr, "Software latency: %f\n", outstream->software_latency);
     fprintf(stderr,
-            "'.s'   - print graph layout\n"
-            "'get'  - print the value of named param\n"
-            "'set'  - set the value of named param\n"
-            "':q'   - quit\n");
+            "\n\t!examples!\n"
+            "new ( SINE -- xx.SINE )\n"
+            "ins ( xx   -- fm      )\n"
+            "outs( xx   -- val     )\n"
+            "pars( xx   -- freq    )\n"
+            "list( xx   -- fm, val, freq )\n"
+            "con ( xx.val yy.fm -- nn )\n"
+            "dis ( nn   -- ok      )\n"
+            "get ( xx.freq -- a )\n"
+            "set ( xx.freq b -- ok )\n"
+            "BYE   - quit\n\n");
 
     if (outstream->layout_error)
         fprintf(stderr, "unable to set channel layout: %s\n", soundio_strerror(outstream->layout_error));
@@ -364,7 +371,7 @@ break;
 // see: https://www.haskell.org/onlinereport/haskell2010/haskellch8.html#x15-1490008
 // particularly 'Dynamic Wrapper' 2/3rds down the page
 
-    cli_hs();
+    hs_cli();
     hs_exit(); // end haskell stub
 
     fprintf( stderr

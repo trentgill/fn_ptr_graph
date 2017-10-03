@@ -10,6 +10,7 @@ GHC = ghc
 SRC = main.c \
       dsp_block.c \
       $(WRLIB)/wrMath.c \
+      $(WRDSP)/wrFilterCli.c \
       $(WRDSP)/wrFilter.c \
       $(WRDSP)/wrOscSine.c
 
@@ -17,7 +18,8 @@ SRC = main.c \
 # otherwise dependencies aren't found
 HMAIN = Hcli
 HSRC = FTypes.hs \
-       Dict.hs \
+       DSP.hs \
+	   Dict.hs \
        $(HMAIN).hs
 
 OBJDIR = .

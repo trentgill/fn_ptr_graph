@@ -3,8 +3,9 @@
 #include <string.h>
 
 #include "wrMath.h"
-#include "wrFilter.h"
-#include "wrOscSine.h"
+
+// dsp environment config
+DSP_env_t _dsp;
 
 filter_lp1_t filt;
 osc_sine_t   sineo[3];
@@ -12,11 +13,11 @@ osc_sine_t   sineo[3];
 void module_init( void )
 {
     for(uint8_t p=0;p<3;p++){
-        osc_sine_init( &sineo[p] );
+        osc_sine_init( &sineo[p] ); _dsp.m_count++;
         float tt = ((float)(p)*1.5 + 1.0) * 0.02;
         osc_sine_time( &sineo[p], tt );
     }
-    lp1_init( &filt );
+    lp1_init( &filt ); _dsp.m_count++;
     lp1_set_coeff( &filt, 0.0001 );
 }
 
@@ -61,42 +62,29 @@ void module_process_frame(float* in, float* out, uint16_t b_size)
             *out2++ += *tmp2++;
         }
     }
-//    mul_vf_f(out, 0.33, tmp, b_size);
+    mul_vf_f(out, 0.0, out, b_size);
 //    lp1_step_v( &filt, tmp, out, b_size );
 }
 #endif
 
 // CLI
-char* module_cli( char* cli_input, char* cli_return )
+//DSP_env_t* hs_list( void )
+int* hs_list( void )
 {
-    // temporary direct comparisons
-    const char* dotess = ".s\n"; // must be last instr
-    const char* get = "get "; // must have an argument
-    const char* set = "set "; // must have an arg
-    const char* quit = ":q\n";
+    return &(_dsp.m_count);
+}
 
-    char param[64];
+int hs_resolve( int* io )
+{
+    return *io;
+}
 
-    if( 0 == memcmp( dotess, cli_input, 3 ) ){
-        // print everything
-        cli_return = "print it all";
-    } else if( 0 == memcmp( get, cli_input, 4 ) ){
-        // get named parameter
+const module_descriptor_t* hs_dspInit( void )
+{
+    return &(modules[0]);
+}
 
-        memcpy( param, cli_input+4, strlen(cli_input+4)+1 );
-            // this just returns the rest
-            // need to match string against param options
-
-
-        sprintf( cli_return, "getting %s", param );
-    } else if( 0 == memcmp( set, cli_input, 4 ) ){
-        // set named parameter
-        cli_return = "set next";
-    } else if (0 == memcmp( quit, cli_input, 5 ) ){
-        cli_return = "leaving..";
-    } else {
-        cli_return = "not found";
-    }
-
-    return cli_return;
+module_t* hs_dspCreateMod( func_t fn )
+{
+    return fn();
 }
