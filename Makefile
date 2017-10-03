@@ -12,7 +12,10 @@ SRC = main.c \
       $(WRLIB)/wrMath.c \
       $(WRDSP)/wrFilterCli.c \
       $(WRDSP)/wrFilter.c \
-      $(WRDSP)/wrOscSine.c
+      $(WRDSP)/wrOscSineCli.c \
+      $(WRDSP)/wrOscSine.c \
+	  $(WRDSP)/wrLpGateCli.c \
+	  $(WRDSP)/wrLpGate.c
 
 # NB! files must be listed bottom-up (main is last)
 # otherwise dependencies aren't found

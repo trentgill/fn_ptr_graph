@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 #include "wrFilterCli.h"
-#include "wrOscSine.h"
-#include "wrLpGate.h"
+#include "wrOscSineCli.h"
+#include "wrLpGateCli.h"
 
 // #define SINGLE_SAMPLE
 
@@ -35,12 +35,10 @@ typedef struct {
 // List of all the DSP objects that are available to the graph
 // nb: these _init fns actually need to be custom accessor fns
 static const module_descriptor_t modules[] =
-    { { "LPF1\0          ", graph_lp1_init }
-    //, { "LPG\0           ", lpgate_init    }
-//    , { "SINE\0          ", osc_sine_init  }
-//    , { "*              ", NULL           }
-//    , { "+              ", NULL           }
-    , { "\0              ", NULL           }
+    { { "LPF1"            , graph_lp1_init      }
+    , { "SINE"            , graph_osc_sine_init }
+    , { "LPG"             , graph_lpgate_init   }
+    , { ""                , NULL                }
     };
 
 //const char* hs_dspInit( void );
