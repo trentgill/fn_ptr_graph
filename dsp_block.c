@@ -4,6 +4,7 @@
 
 #include "wrMath.h"
 
+
 // dsp environment config
 DSP_env_t _dsp;
 
@@ -24,6 +25,7 @@ void module_init( void )
 #ifdef SINGLE_SAMPLE
 void module_process_frame(float* in, float* out, uint16_t b_size)
 {
+    block_size = b_size;
     *out++ = 0.0;
 }
 #else
@@ -36,6 +38,7 @@ void zero_frame( float* out, uint16_t b_size )
 void module_process_frame(float* in, float* out, uint16_t b_size)
 {
     //zero_frame( out, b_size );
+    block_size = b_size;
     float  tmp[b_size];
     float  tmpx[b_size];
     float  tmpy[b_size];
@@ -44,6 +47,13 @@ void module_process_frame(float* in, float* out, uint16_t b_size)
     float* tmpx2 = tmpx;
     float* tmpy2 = tmpy;
     uint16_t i;
+
+// zero out an empty graph
+    if( !_dsp.m_count || !_dsp.p_count ){
+        zero_frame( out, b_size );
+        return;
+    }
+
     for( i=0; i<b_size; i++ ){
         *tmpx2++ = 1.0;
         *tmpy2++ = 0.0;
@@ -84,7 +94,21 @@ const module_descriptor_t* hs_dspInit( void )
     return &(modules[0]);
 }
 
-module_t* hs_dspCreateMod( func_t fn )
+module_t* hs_dspCreateMod( func_t initfn )
 {
-    return fn();
+    module_t* p = initfn();
+    _dsp.modules[_dsp.m_count++] = p;
+    if(_dsp.m_count >= MODULE_LIMIT){ printf("too many modules!"); }
+    return p;
+}
+
+void hs_dspPatch( void )
+{
+    //
+}
+
+
+int* hs_dspGetIns( module_t* box )
+{
+    return ((int*)&(box->in_count));
 }

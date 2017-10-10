@@ -29,8 +29,12 @@ foreign export ccall hs_cli :: IO CInt
 hs_cli :: IO CInt
 hs_cli = do
     dspFns <- dspInit
-    putStrLn (show $ dspCreateMod (snd (head dspFns)))
     putStrLn (show dspFns)
+    let newMod = dspCreateMod (snd (head dspFns))
+    putStrLn (show newMod)
+    newIns <- dspGetIns newMod
+    putStrLn (show newIns)
+    putStrLn (show $ dspCreateMod (snd (head dspFns)))
     repl . fQUIT  -- process default input_string (extend dict)
          $ FState { datastack     = []
                   , input_string  = hoth_defns
@@ -83,3 +87,30 @@ foreign import ccall "dsp_block.h hs_dspCreateMod"
 
 dspCreateMod :: FunPtr () -> Ptr ()
 dspCreateMod = c_dspCreateMod
+
+foreign import ccall "dsp_block.h hs_dspGetIns"
+    c_dspGetIns :: Ptr () -> Ptr CInt
+
+type DSPIns = (String, Ptr ())
+
+dspGetIns :: Ptr () -> IO [DSPIns]
+dspGetIns p = do
+    let pay = (c_dspGetIns p)
+    count <- peek pay
+    ppp  <- peek $ plusPtr pay 8
+    list <- getIns (ppp) (fromIntegral count) []
+    return list
+    where
+        getIns :: Ptr () -> Integer -> [DSPIns] -> IO [DSPIns]
+        getIns p 0 list = return list
+        getIns p c list = do
+            str <- peekCString (plusPtr p 8)
+            getIns (plusPtr p 24) (c-1) ((str,p):list)
+
+
+
+--foreign import ccall "dsp_block.h hs_dspPatch"
+--    c_dspPatch :: Ptr () -> Ptr () -> Ptr () -> Ptr () -> Ptr ()
+--
+--dspPatch :: Ptr () -> Ptr () -> Ptr () -> Ptr () -> Ptr ()
+--dspPatch = c_dspPatch

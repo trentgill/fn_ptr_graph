@@ -16,10 +16,13 @@ void module_process_frame( float*   in
                          , float*   out
                          , uint16_t b_size
                          );
-
-typedef struct DSP_env {
-    int     m_count;
-
+#define MODULE_LIMIT 100
+#define PATCH_LIMIT  100
+typedef struct {
+    int       m_count;
+    module_t* modules[MODULE_LIMIT];
+    int       p_count;
+    patch_t*  patches[PATCH_LIMIT];
 } DSP_env_t;
 
 int hs_addone( int in );
@@ -46,7 +49,8 @@ const module_descriptor_t* hs_dspInit( void );
 
 typedef module_t* (func_t)( void );
 module_t* hs_dspCreateMod( func_t fn );
-
+int* hs_dspGetIns( module_t* box );
+void hs_dspPatch( void );
 //DSP_env_t* hs_list( void )
 
 // thinking about haskell FFI access here
@@ -65,11 +69,3 @@ module_t* hs_dspCreateMod( func_t fn );
 //      patch_id
 //      success/failure
 //      param_val
-//
-
-// need some list (enum?) of available module types
-// how does NEW scan a list? best to have a formatted list
-// and send to haskell as a ptr & do the work there.
-// when an entry is found, need to return a ptr to C
-// which will execute the associated init function
-// which will finally return the 'id' (aka address) of the mod

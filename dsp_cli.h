@@ -3,11 +3,17 @@
 // Command Line Interface
 #define CLI_ENABLED
 
+#include <stdint.h>
+
+uint16_t block_size;
+
 typedef struct m_in {
+    float*  src;
     char    name[16];
 } m_in_t;
 
 typedef struct m_out {
+    float*  dst;
     char    name[16];
 } m_out_t;
 
@@ -19,8 +25,10 @@ typedef struct m_param {
 typedef struct module {
     int            id;
     void*          self;  // pointer to lib's struct
-    // prob need a fnptr to the dsp process fn?
+    void (*process_fnptr)( struct module* box );
+    int            in_count;
     m_in_t*        ins;
+    int            out_count;
     m_out_t*       outs;
     m_param_t*     pars;
 } module_t;
@@ -49,7 +57,11 @@ typedef struct patch {
 
 
 
-
+// steps to usefulness:
+// create a module
+// patch module to output
+// discover module params
+// set module params
 
 
 
