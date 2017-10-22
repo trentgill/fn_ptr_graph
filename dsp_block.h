@@ -50,6 +50,7 @@ const module_descriptor_t* hs_dspInit( void );
 typedef module_t* (func_t)( void );
 module_t* hs_dspCreateMod( func_t fn );
 int* hs_dspGetIns( module_t* box );
+int* hs_dspGetParams( module_t* box );
 void hs_dspPatch( void );
 //DSP_env_t* hs_list( void )
 

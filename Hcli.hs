@@ -107,6 +107,31 @@ dspGetIns p = do
             str <- peekCString (plusPtr p 8)
             getIns (plusPtr p 24) (c-1) ((str,p):list)
 
+foreign import ccall "dsp_block.h hs_dspGetParams"
+    c_dspGetParams :: Ptr () -> Ptr CInt
+
+type DSPParams = (String, FunPtr (), FunPtr ())
+
+dspGetParams :: Ptr () -> IO [DSPParams]
+dspGetParams p = do
+    let pay = (c_dspGetParams p)
+    count <- peek pay
+    ppp  <- peek $ plusPtr pay 8
+    list <- getParams (ppp) (fromIntegral count) []
+    return list
+    where
+        getParams :: Ptr () -> Integer -> [DSPParams] -> IO [DSPParams]
+        getParams p 0 list = return list
+        getParams p c list = do
+            str <- peekCString ( castPtr p )
+            getParams (plusPtr p 24)
+                      (c-1)
+                      ( ( str
+                        , castPtrToFunPtr (plusPtr p 8)
+                        , castPtrToFunPtr (plusPtr p 16)
+                        ) : list)
+
+
 
 
 --foreign import ccall "dsp_block.h hs_dspPatch"

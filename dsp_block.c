@@ -112,3 +112,7 @@ int* hs_dspGetIns( module_t* box )
 {
     return ((int*)&(box->in_count));
 }
+int* hs_dspGetParams( module_t* box )
+{
+    return ((int*)&(box->par_count));
+}

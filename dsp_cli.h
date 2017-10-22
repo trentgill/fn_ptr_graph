@@ -19,7 +19,10 @@ typedef struct m_out {
 
 typedef struct m_param {
     char    name[16];
-    float   value; // could be a union type?
+    float   (*get_param)( void* box );
+    void    (*set_param)( void* box
+                        , float val
+                        );
 } m_param_t;
 
 typedef struct module {
@@ -30,6 +33,7 @@ typedef struct module {
     m_in_t*        ins;
     int            out_count;
     m_out_t*       outs;
+    int            par_count;
     m_param_t*     pars;
 } module_t;
 
