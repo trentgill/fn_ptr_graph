@@ -102,9 +102,22 @@ module_t* hs_dspCreateMod( func_t initfn )
     return p;
 }
 
-void hs_dspPatch( void )
+int hs_dspPatch( module_t* srcMod
+               , void*     src
+               , module_t* dstMod
+               , void*     dst
+               )
 {
-    //
+    if( _dsp.p_count >= PATCH_LIMIT ){ return 1; } // failed, too many patches
+
+    patch_t* new = _dsp.patches[_dsp.p_count];
+    new->src_module = srcMod;
+    new->src        = src;
+    new->dst_module = dstMod;
+    new->dst        = dst;
+
+    _dsp.p_count++;
+    return 0; // success
 }
 
 

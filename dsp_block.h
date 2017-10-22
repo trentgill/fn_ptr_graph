@@ -38,7 +38,8 @@ typedef struct {
 // List of all the DSP objects that are available to the graph
 // nb: these _init fns actually need to be custom accessor fns
 static const module_descriptor_t modules[] =
-    { { "LPF1"            , graph_lp1_init      }
+    { { "IO"              , NULL                }
+    , { "LPF1"            , graph_lp1_init      }
     , { "SINE"            , graph_osc_sine_init }
     , { "LPG"             , graph_lpgate_init   }
     , { ""                , NULL                }
@@ -51,7 +52,12 @@ typedef module_t* (func_t)( void );
 module_t* hs_dspCreateMod( func_t fn );
 int* hs_dspGetIns( module_t* box );
 int* hs_dspGetParams( module_t* box );
-void hs_dspPatch( void );
+// should also pass environment so it's not global
+int hs_dspPatch( module_t*  srcMod
+               , void*      src
+               , module_t*  dstMod
+               , void*      dst
+               );
 //DSP_env_t* hs_list( void )
 
 // thinking about haskell FFI access here

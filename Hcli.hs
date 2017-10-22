@@ -34,6 +34,8 @@ hs_cli = do
     putStrLn (show newMod)
     newIns <- dspGetIns newMod
     putStrLn (show newIns)
+    newParams <- dspGetParams newMod
+    putStrLn (show newParams)
     putStrLn (show $ dspCreateMod (snd (head dspFns)))
     repl . fQUIT  -- process default input_string (extend dict)
          $ FState { datastack     = []
@@ -123,12 +125,12 @@ dspGetParams p = do
         getParams :: Ptr () -> Integer -> [DSPParams] -> IO [DSPParams]
         getParams p 0 list = return list
         getParams p c list = do
-            str <- peekCString ( castPtr p )
-            getParams (plusPtr p 24)
+            str <- peekCString ( plusPtr p 16 )
+            getParams (plusPtr p 32)
                       (c-1)
                       ( ( str
+                        , castPtrToFunPtr p
                         , castPtrToFunPtr (plusPtr p 8)
-                        , castPtrToFunPtr (plusPtr p 16)
                         ) : list)
 
 

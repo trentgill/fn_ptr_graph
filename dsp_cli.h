@@ -18,11 +18,11 @@ typedef struct m_out {
 } m_out_t;
 
 typedef struct m_param {
-    char    name[16];
     float   (*get_param)( void* box );
     void    (*set_param)( void* box
                         , float val
                         );
+    char    name[16];
 } m_param_t;
 
 typedef struct module {
