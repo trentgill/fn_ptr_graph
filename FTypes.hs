@@ -1,5 +1,10 @@
 module FTypes where
 
+import Foreign.Ptr
+import Foreign.C.Types
+import Foreign.C.String
+
+
 -- State
 -- -- Datastack
 -- -- Compile Flag
@@ -16,6 +21,7 @@ data FState = FState
             , return_stack :: FRStack
             , quit_flag :: Bool
             , abort_flag :: Bool
+            , dsp_action :: DSPAction
             } deriving (Show)
 
 -- Type aliases
@@ -53,3 +59,35 @@ instance Show FStackItem where
     show (FList []) = "[]"
     show (FList (x:[])) = show x
     show (FList x) = show (head x) ++ show (tail x)
+
+-- DSP Types
+
+-- Module Instance
+type ModInstance = Ptr ()
+
+-- Available Modules List
+type ModName = String
+type ModInitFn = FunPtr ()
+type ModAvailable = (ModName, ModInitFn)
+
+-- Parameters
+type PmName = String
+type PmGetter = FunPtr ()
+type PmSetter = FunPtr ()
+type ModParams = (PmName, PmGetter, PmSetter)
+
+-- Inputs
+type InCount = CInt
+type InName = String
+type InPtr = Ptr ()
+type ModIns = (InName, InPtr)
+
+data DSPAction = None
+               | NewMod ModAvailable
+               | ListParams ModInstance
+               | GetParam PmGetter ModInstance
+               | SetParam PmSetter ModInstance
+               | ListInputs ModInstance
+               | NewPatch ModInstance ModInstance
+               deriving (Show)
+

@@ -54,9 +54,9 @@ int* hs_dspGetIns( module_t* box );
 int* hs_dspGetParams( module_t* box );
 // should also pass environment so it's not global
 int hs_dspPatch( module_t*  srcMod
-               , void*      src
+               , int        srcOutIx
                , module_t*  dstMod
-               , void*      dst
+               , int        dstInIx
                );
 //DSP_env_t* hs_list( void )
 

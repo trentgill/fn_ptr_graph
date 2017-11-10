@@ -30,30 +30,31 @@ hs_cli :: IO CInt
 hs_cli = do
     dspFns <- dspInit
     putStrLn (show dspFns)
-    let newMod = dspCreateMod (snd (head dspFns))
+    let newMod = dspCreateMod (head dspFns)
     putStrLn (show newMod)
     newIns <- dspGetIns newMod
     putStrLn (show newIns)
     newParams <- dspGetParams newMod
     putStrLn (show newParams)
-    putStrLn (show $ dspCreateMod (snd (head dspFns)))
-    repl . fQUIT  -- process default input_string (extend dict)
-         $ FState { datastack     = []
-                  , input_string  = hoth_defns
-                  , output_string = ""
-                  , dictionary    = native_dict
-                  , compile_flag  = False
-                  , return_stack  = []
-                  , quit_flag     = False
-                  , abort_flag    = False
-                  }
+    putStrLn (show $ dspCreateMod (head dspFns))
+    iState <- fQUIT FState { datastack     = []
+                           , input_string  = hoth_defns
+                           , output_string = ""
+                           , dictionary    = native_dict
+                           , compile_flag  = False
+                           , return_stack  = []
+                           , quit_flag     = False
+                           , abort_flag    = False
+                           , dsp_action    = None
+                           }
+    repl iState
 
 repl :: FState -> IO CInt -- takes state as input
 repl state = do
     accept_me <- getLine
-    let newState = fQUIT
-                 . (fACCEPT accept_me)
-                 $ state
+    newState <- fQUIT
+              . (fACCEPT accept_me)
+              $ state
     putStrLn (output_string newState)
     if (quit_flag newState)
         then return (1)
@@ -63,79 +64,79 @@ repl state = do
         clear s = s { output_string = "" }
 
 -- Gather info about DSP environment
-foreign import ccall "dsp_block.h hs_dspInit"
-    c_dspInit :: CString
-
-type DSPModDesc = (String, FunPtr ())
-
-dspInit :: IO [DSPModDesc]
-dspInit = do
-    list <- findFns c_dspInit []
-    return list
-    where
-        done :: String -> Bool
-        done [] = True
-        done _  = False
-        findFns :: CString -> [DSPModDesc] -> IO [DSPModDesc]
-        findFns ptr list = do
-            str <- peekCString ptr
-            fp <- peek (castPtr $ plusPtr ptr 16)
-            if (done str)
-                then return list
-                else findFns (plusPtr ptr 24) ((str,fp):list)
-
-foreign import ccall "dsp_block.h hs_dspCreateMod"
-    c_dspCreateMod :: FunPtr () -> Ptr ()
-
-dspCreateMod :: FunPtr () -> Ptr ()
-dspCreateMod = c_dspCreateMod
-
-foreign import ccall "dsp_block.h hs_dspGetIns"
-    c_dspGetIns :: Ptr () -> Ptr CInt
-
-type DSPIns = (String, Ptr ())
-
-dspGetIns :: Ptr () -> IO [DSPIns]
-dspGetIns p = do
-    let pay = (c_dspGetIns p)
-    count <- peek pay
-    ppp  <- peek $ plusPtr pay 8
-    list <- getIns (ppp) (fromIntegral count) []
-    return list
-    where
-        getIns :: Ptr () -> Integer -> [DSPIns] -> IO [DSPIns]
-        getIns p 0 list = return list
-        getIns p c list = do
-            str <- peekCString (plusPtr p 8)
-            getIns (plusPtr p 24) (c-1) ((str,p):list)
-
-foreign import ccall "dsp_block.h hs_dspGetParams"
-    c_dspGetParams :: Ptr () -> Ptr CInt
-
-type DSPParams = (String, FunPtr (), FunPtr ())
-
-dspGetParams :: Ptr () -> IO [DSPParams]
-dspGetParams p = do
-    let pay = (c_dspGetParams p)
-    count <- peek pay
-    ppp  <- peek $ plusPtr pay 8
-    list <- getParams (ppp) (fromIntegral count) []
-    return list
-    where
-        getParams :: Ptr () -> Integer -> [DSPParams] -> IO [DSPParams]
-        getParams p 0 list = return list
-        getParams p c list = do
-            str <- peekCString ( plusPtr p 16 )
-            getParams (plusPtr p 32)
-                      (c-1)
-                      ( ( str
-                        , castPtrToFunPtr p
-                        , castPtrToFunPtr (plusPtr p 8)
-                        ) : list)
-
-
-
-
+-- foreign import ccall "dsp_block.h hs_dspInit"
+--     c_dspInit :: CString
+--
+-- type DSPModDesc = (String, FunPtr ())
+--
+-- dspInit :: IO [DSPModDesc]
+-- dspInit = do
+--     list <- findFns c_dspInit []
+--     return list
+--     where
+--         done :: String -> Bool
+--         done [] = True
+--         done _  = False
+--         findFns :: CString -> [DSPModDesc] -> IO [DSPModDesc]
+--         findFns ptr list = do
+--             str <- peekCString ptr
+--             fp <- peek (castPtr $ plusPtr ptr 16)
+--             if (done str)
+--                 then return list
+--                 else findFns (plusPtr ptr 24) ((str,fp):list)
+--
+-- foreign import ccall "dsp_block.h hs_dspCreateMod"
+--     c_dspCreateMod :: FunPtr () -> Ptr ()
+--
+-- dspCreateMod :: FunPtr () -> Ptr ()
+-- dspCreateMod = c_dspCreateMod
+--
+-- foreign import ccall "dsp_block.h hs_dspGetIns"
+--     c_dspGetIns :: Ptr () -> Ptr CInt
+--
+-- type DSPIns = (String, Ptr ())
+--
+-- dspGetIns :: Ptr () -> IO [DSPIns]
+-- dspGetIns p = do
+--     let pay = (c_dspGetIns p)
+--     count <- peek pay
+--     ppp  <- peek $ plusPtr pay 8
+--     list <- getIns (ppp) (fromIntegral count) []
+--     return list
+--     where
+--         getIns :: Ptr () -> Integer -> [DSPIns] -> IO [DSPIns]
+--         getIns p 0 list = return list
+--         getIns p c list = do
+--             str <- peekCString (plusPtr p 8)
+--             getIns (plusPtr p 24) (c-1) ((str,p):list)
+--
+-- foreign import ccall "dsp_block.h hs_dspGetParams"
+--     c_dspGetParams :: Ptr () -> Ptr CInt
+--
+-- type DSPParams = (String, FunPtr (), FunPtr ())
+--
+-- dspGetParams :: Ptr () -> IO [DSPParams]
+-- dspGetParams p = do
+--     let pay = (c_dspGetParams p)
+--     count <- peek pay
+--     ppp  <- peek $ plusPtr pay 8
+--     list <- getParams (ppp) (fromIntegral count) []
+--     return list
+--     where
+--         getParams :: Ptr () -> Integer -> [DSPParams] -> IO [DSPParams]
+--         getParams p 0 list = return list
+--         getParams p c list = do
+--             str <- peekCString ( plusPtr p 16 )
+--             getParams (plusPtr p 32)
+--                       (c-1)
+--                       ( ( str
+--                         , castPtrToFunPtr p
+--                         , castPtrToFunPtr (plusPtr p 8)
+--                         ) : list)
+--
+--
+--
+--
 --foreign import ccall "dsp_block.h hs_dspPatch"
 --    c_dspPatch :: Ptr () -> Ptr () -> Ptr () -> Ptr () -> Ptr ()
 --
