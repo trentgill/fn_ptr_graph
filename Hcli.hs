@@ -28,15 +28,14 @@ foreign export ccall hs_cli :: IO CInt
 -- set initial state
 hs_cli :: IO CInt
 hs_cli = do
-    dspFns <- dspInit
-    putStrLn (show dspFns)
-    let newMod = dspCreateMod (head dspFns)
-    putStrLn (show newMod)
-    newIns <- dspGetIns newMod
-    putStrLn (show newIns)
-    newParams <- dspGetParams newMod
-    putStrLn (show newParams)
-    putStrLn (show $ dspCreateMod (head dspFns))
+    dspEnv <- dspInit
+    srcMod <- dspCreateMod (head $ fst dspEnv)
+    dstMod <- dspCreateMod (head $ fst dspEnv)
+    let patchPtr = dspPatch (snd $ snd dspEnv)
+                            srcMod (head $ ins srcMod)
+                            dstMod (head $ outs dstMod)
+    putStrLn (show dspEnv)
+    putStrLn (show patchPtr)
     iState <- fQUIT FState { datastack     = []
                            , input_string  = hoth_defns
                            , output_string = ""

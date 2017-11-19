@@ -18,16 +18,6 @@ void module_process_frame( float*   in
                          );
 #define MODULE_LIMIT 100
 #define PATCH_LIMIT  100
-typedef struct {
-    int       m_count;
-    module_t* modules[MODULE_LIMIT];
-    int       p_count;
-    patch_t*  patches[PATCH_LIMIT];
-} DSP_env_t;
-
-int hs_addone( int in );
-int* hs_list( void );
-int hs_resolve( int* io ); // cheat out of IO()
 
 typedef struct {
     char  name[15];   // 16bytes null-terminated
@@ -45,8 +35,24 @@ static const module_descriptor_t modules[] =
     , { ""                , NULL                }
     };
 
+typedef struct {
+    // possibilities
+    const module_descriptor_t* possible_mods;
+
+    // runtime
+    int       m_count;
+    module_t* modules[MODULE_LIMIT];
+    int       p_count;
+    patch_t*  patches[PATCH_LIMIT];
+} DSP_env_t;
+
+int hs_addone( int in );
+int* hs_list( void );
+int hs_resolve( int* io ); // cheat out of IO()
+
 //const char* hs_dspInit( void );
 const module_descriptor_t* hs_dspInit( void );
+//DSP_env_t* hs_dspInit( void );
 
 typedef module_t* (func_t)( void );
 module_t* hs_dspCreateMod( func_t fn );

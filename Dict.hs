@@ -206,18 +206,18 @@ fROT = stack_op(dRot)
 --dsp actions (implements queued dsp graph changes)
 dsp_act :: DSPAction -> FState -> IO FState
 dsp_act (None) s = return(s)
-dsp_act (NewMod m) s = do
-    let modinstance = dspCreateMod m
-    putStrLn (show modinstance)
-    return s
-dsp_act (ListParams m) s = do
-    params <- dspGetParams m
-    putStrLn (show params)
-    return s
-dsp_act (ListInputs m) s = do
-    ins <- dspGetIns m
-    putStrLn (show ins)
-    return s
+-- dsp_act (NewMod m) s = do
+--     let modinstance = dspCreateMod m
+--     putStrLn (show modinstance)
+--     return s
+-- dsp_act (ListParams m) s = do
+--     params <- dspGetParams m
+--     putStrLn (show params)
+--     return s
+-- dsp_act (ListInputs m) s = do
+--     ins <- dspGetIns m
+--     putStrLn (show ins)
+--     return s
 
 --quit loop
 --here is were ABORT error checking should occur

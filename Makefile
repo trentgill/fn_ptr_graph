@@ -56,3 +56,5 @@ all:
 
 clean:
 	rm $(OBJS) $(EXECUTABLE) $(HOBJS) $(HMAIN)_stub.h
+
+.PHONY: all clean

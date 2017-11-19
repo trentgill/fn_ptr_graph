@@ -1,3 +1,6 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+
 module FTypes where
 
 import Foreign.Ptr
@@ -13,15 +16,15 @@ import Foreign.C.String
 -- -- Dictionary
 
 data FState = FState
-            { datastack :: FDataStack
-            , input_string :: FInput
+            { datastack     :: FDataStack
+            , input_string  :: FInput
             , output_string :: FOutput
-            , dictionary :: FDict
-            , compile_flag :: FCFlag
-            , return_stack :: FRStack
-            , quit_flag :: Bool
-            , abort_flag :: Bool
-            , dsp_action :: DSPAction
+            , dictionary    :: FDict
+            , compile_flag  :: FCFlag
+            , return_stack  :: FRStack
+            , quit_flag     :: Bool
+            , abort_flag    :: Bool
+            , dsp_action    :: DSPAction
             } deriving (Show)
 
 -- Type aliases
@@ -62,32 +65,80 @@ instance Show FStackItem where
 
 -- DSP Types
 
--- Module Instance
-type ModInstance = Ptr ()
+type DSPEnvironment = ( [ModAvailable], DSPRuntime )
 
--- Available Modules List
-type ModName = String
-type ModInitFn = FunPtr ()
-type ModAvailable = (ModName, ModInitFn)
+instance {-# OVERLAPS #-} Show DSPEnvironment where
+    show (mlist, (mods, patches)) =
+        "Mods:\t"
+     ++ concat (map (++ "\n\t")(map (show . fst) mlist))
+     ++ "\nRuntime:\nMods:\t" ++ show (length mods)
+     ++ concat (map (++ "\n")(map (show) mods))
+     ++ "\nPaxes:\t" ++ show (length patches)
+     ++ concat (map (++ "\n")(map (show) patches))
+     ++ "\n"
 
--- Parameters
-type PmName = String
-type PmGetter = FunPtr ()
-type PmSetter = FunPtr ()
-type ModParams = (PmName, PmGetter, PmSetter)
+type ModAvailable = ( ModType, FunPtr () )
 
--- Inputs
-type InCount = CInt
+type ModType = String
+
+instance {-# OVERLAPS #-} Show ModType where
+    show m = m
+
 type InName = String
-type InPtr = Ptr ()
-type ModIns = (InName, InPtr)
+type ParamName = String
+type OutName = String
+
+type DSPRuntime = ( [ActiveMod], [ActivePatch] )
+
+data ActiveMod = ActiveMod
+               { mtype   :: ModType
+               , mindex  :: Int
+               , address :: Ptr ()
+               , ins     :: [ModIn]
+               , params  :: [ModParam]
+               , outs    :: [ModOut]
+               }
+
+instance Show ActiveMod where
+    show m = shows (mtype m) "\t"
+          ++ shows (mindex m) "\n\t"
+          ++ shows (ins m) "\n\t"
+          ++ shows (params m) "\n\t"
+          ++ shows (outs m) "\n\t"
+          ++ "}"
+
+type ModIn = (InName, InAddress)
+type ModParam = (ParamName, ParamSetter, ParamValue)
+type ModOut = (OutName, OutAddress)
+
+type InAddress = Ptr ()
+type ParamSetter = FunPtr ()
+type ParamValue = Double
+type OutAddress = Ptr ()
+
+type ActivePatch = (PatchIx, PatchSrc, PatchDst)
+type PatchIx  = Int
+type PatchSrc = (ActiveMod, ModOut)
+type PatchDst = (ActiveMod, ModIn)
+
+instance {-# OVERLAPS #-} Show [ActivePatch] where
+    show plist = "Patches:\n" ++
+        concat (map (++ "\n")(map (show) plist ))
+
+instance {-# OVERLAPS #-} Show ActivePatch where
+    show (ix, src, dst) = shows ix "\t"
+        ++ shows (mindex (fst src)) "."
+            ++ shows (mtype (fst src)) "."
+            ++ shows (fst $ snd src) "\t -> "
+        ++ shows (mindex (fst dst)) "."
+            ++ shows (mtype (fst dst)) "."
+            ++ show (fst $ snd dst)
 
 data DSPAction = None
                | NewMod ModAvailable
-               | ListParams ModInstance
-               | GetParam PmGetter ModInstance
-               | SetParam PmSetter ModInstance
-               | ListInputs ModInstance
-               | NewPatch ModInstance ModInstance
+               | ListParams ActiveMod
+               | GetParam ActiveMod
+               | SetParam ParamSetter ActiveMod
+               | ListInputs ActiveMod
+               | NewPatch ActiveMod ActiveMod
                deriving (Show)
-

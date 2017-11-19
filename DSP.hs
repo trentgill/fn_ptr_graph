@@ -10,79 +10,93 @@ import FTypes
 
 -- Gather info about DSP environment
 foreign import ccall "dsp_block.h hs_dspInit"
-    c_dspInit :: CString
+    c_dspInit :: Ptr ()
 
-dspInit :: IO [ModAvailable]
+dspInit :: IO DSPEnvironment
 dspInit = do
-    list <- findFns c_dspInit []
-    return list
-    where
-        done :: String -> Bool
-        done [] = True
-        done _  = False
-        findFns :: CString -> [ModAvailable] -> IO [ModAvailable]
-        findFns ptr list = do
-            str <- peekCString ptr
-            fp <- peek (castPtr $ plusPtr ptr 16)
-            if (done str)
-                then return list
-                else findFns (plusPtr ptr 24) ((str,fp):list)
+    let struct = c_dspInit
+    --modstruct <- c_dspInit
+    mlist <- findAvailMods (struct ) []
+    --mactive <- []
+    --pactive <- []
+    return ( mlist, ([], []))
 
+isEmptyString :: String -> Bool
+isEmptyString [] = True
+isEmptyString _  = False
+
+findAvailMods :: Ptr () -> [ModAvailable] -> IO [ModAvailable]
+findAvailMods ptr list = do
+    str <- peekCString $ castPtr ptr
+    fp <- peek (castPtr $ plusPtr ptr 16)
+    if (isEmptyString str)
+        then return list
+        else findAvailMods (plusPtr ptr 24)
+                           ((str,fp) : list )
 
 foreign import ccall "dsp_block.h hs_dspCreateMod"
-    c_dspCreateMod :: ModInitFn -> ModInstance
+    c_dspAllocMod :: FunPtr () -> Ptr ()
 
-dspCreateMod :: ModAvailable -> ModInstance
-dspCreateMod = c_dspCreateMod . snd
+dspCreateMod :: ModAvailable -> IO ActiveMod
+dspCreateMod m = return $ ActiveMod
+    { mtype     = fst m
+    , mindex    = 0 -- needs to be set by environment
+    , address   = c_dspAllocMod $ snd m
+    , ins       = ("in",nullPtr):[]
+    , params    = []
+    , outs      = ("out",nullPtr):[]
+    }
 
-
-foreign import ccall "dsp_block.h hs_dspGetIns"
-    c_dspGetIns :: ModInstance -> Ptr CInt
-
-
-dspGetIns :: ModInstance -> IO [ModIns]
-dspGetIns p = do
-    let pay = (c_dspGetIns p)
-    count <- peek pay
-    ppp  <- peek $ plusPtr pay 8
-    list <- getIns (ppp) (fromIntegral count) []
-    return list
-    where
-        getIns :: Ptr () -> Integer -> [ModIns] -> IO [ModIns]
-        getIns p 0 list = return list
-        getIns p c list = do
-            str <- peekCString (plusPtr p 8)
-            getIns (plusPtr p 24) (c-1) ((str,p):list)
-
-
-foreign import ccall "dsp_block.h hs_dspGetParams"
-    c_dspGetParams :: ModInstance -> Ptr CInt
-
-dspGetParams :: ModInstance -> IO [ModParams]
-dspGetParams p = do
-    let pay = (c_dspGetParams p)
-    count <- peek pay
-    ppp  <- peek $ plusPtr pay 8
-    list <- getParams (ppp) (fromIntegral count) []
-    return list
-    where
-        getParams :: Ptr () -> Integer -> [ModParams] -> IO [ModParams]
-        getParams p 0 list = return list
-        getParams p c list = do
-            str <- peekCString ( plusPtr p 16 )
-            getParams (plusPtr p 32)
-                      (c-1)
-                      ( ( str
-                        , castPtrToFunPtr p
-                        , castPtrToFunPtr (plusPtr p 8)
-                        ) : list)
-
-
-foreign import ccall "dsp_block.h hs_dspPatch"
-    c_dspPatch :: ModInstance -> CInt -> ModInstance -> CInt -> CInt
-
-dspPatch :: ModInstance -> CInt -> ModInstance -> CInt -> CInt
-dspPatch = c_dspPatch
+-- foreign import ccall "dsp_block.h hs_dspGetIns"
+--     c_dspGetIns :: ModInstance -> Ptr CInt
+--
+--
+-- dspGetIns :: ModInstance -> IO [ModIns]
+-- dspGetIns p = do
+--     let pay = (c_dspGetIns p)
+--     count <- peek pay
+--     ppp  <- peek $ plusPtr pay 8
+--     list <- getIns (ppp) (fromIntegral count) []
+--     return list
+--     where
+--         getIns :: Ptr () -> Integer -> [ModIns] -> IO [ModIns]
+--         getIns p 0 list = return list
+--         getIns p c list = do
+--             str <- peekCString (plusPtr p 8)
+--             getIns (plusPtr p 24) (c-1) ((str,p):list)
+--
+--
+-- foreign import ccall "dsp_block.h hs_dspGetParams"
+--     c_dspGetParams :: ModInstance -> Ptr CInt
+--
+-- dspGetParams :: ModInstance -> IO [ModParams]
+-- dspGetParams p = do
+--     let pay = (c_dspGetParams p)
+--     count <- peek pay
+--     ppp  <- peek $ plusPtr pay 8
+--     list <- getParams (ppp) (fromIntegral count) []
+--     return list
+--     where
+--         getParams :: Ptr () -> Integer -> [ModParams] -> IO [ModParams]
+--         getParams p 0 list = return list
+--         getParams p c list = do
+--             str <- peekCString ( plusPtr p 16 )
+--             getParams (plusPtr p 32)
+--                       (c-1)
+--                       ( ( str
+--                         , castPtrToFunPtr p
+--                         , castPtrToFunPtr (plusPtr p 8)
+--                         ) : list)
+--
+-- haskell only fn
+dspPatch :: [ActivePatch]
+         -> ActiveMod
+         -> ModOut
+         -> ActiveMod
+         -> ModIn
+         -> [ActivePatch]
+dspPatch pl s so d di = (1,(s,so),(d,di)):pl
+                -- note this `1` is a fake connection index
 
 
 
