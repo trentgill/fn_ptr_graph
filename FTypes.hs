@@ -71,9 +71,9 @@ instance {-# OVERLAPS #-} Show DSPEnvironment where
     show (mlist, (mods, patches)) =
         "Mods:\t"
      ++ concat (map (++ "\n\t")(map (show . fst) mlist))
-     ++ "\nRuntime:\nMods:\t" ++ show (length mods)
+     ++ "\nRuntime:\nMods:\t" ++ shows (length mods) "\n"
      ++ concat (map (++ "\n")(map (show) mods))
-     ++ "\nPaxes:\t" ++ show (length patches)
+     ++ "\nPaxes:\t" ++ shows (length patches) "\n"
      ++ concat (map (++ "\n")(map (show) patches))
      ++ "\n"
 
@@ -83,6 +83,7 @@ type ModType = String
 
 instance {-# OVERLAPS #-} Show ModType where
     show m = m
+    -- just forces no quote marks around names
 
 type InName = String
 type ParamName = String

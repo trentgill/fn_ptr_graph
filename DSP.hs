@@ -15,10 +15,7 @@ foreign import ccall "dsp_block.h hs_dspInit"
 dspInit :: IO DSPEnvironment
 dspInit = do
     let struct = c_dspInit
-    --modstruct <- c_dspInit
     mlist <- findAvailMods (struct ) []
-    --mactive <- []
-    --pactive <- []
     return ( mlist, ([], []))
 
 isEmptyString :: String -> Bool
@@ -47,58 +44,28 @@ dspCreateMod m = return $ ActiveMod
     , outs      = ("out",nullPtr):[]
     }
 
--- foreign import ccall "dsp_block.h hs_dspGetIns"
---     c_dspGetIns :: ModInstance -> Ptr CInt
---
---
--- dspGetIns :: ModInstance -> IO [ModIns]
--- dspGetIns p = do
---     let pay = (c_dspGetIns p)
---     count <- peek pay
---     ppp  <- peek $ plusPtr pay 8
---     list <- getIns (ppp) (fromIntegral count) []
---     return list
---     where
---         getIns :: Ptr () -> Integer -> [ModIns] -> IO [ModIns]
---         getIns p 0 list = return list
---         getIns p c list = do
---             str <- peekCString (plusPtr p 8)
---             getIns (plusPtr p 24) (c-1) ((str,p):list)
---
---
--- foreign import ccall "dsp_block.h hs_dspGetParams"
---     c_dspGetParams :: ModInstance -> Ptr CInt
---
--- dspGetParams :: ModInstance -> IO [ModParams]
--- dspGetParams p = do
---     let pay = (c_dspGetParams p)
---     count <- peek pay
---     ppp  <- peek $ plusPtr pay 8
---     list <- getParams (ppp) (fromIntegral count) []
---     return list
---     where
---         getParams :: Ptr () -> Integer -> [ModParams] -> IO [ModParams]
---         getParams p 0 list = return list
---         getParams p c list = do
---             str <- peekCString ( plusPtr p 16 )
---             getParams (plusPtr p 32)
---                       (c-1)
---                       ( ( str
---                         , castPtrToFunPtr p
---                         , castPtrToFunPtr (plusPtr p 8)
---                         ) : list)
---
+-- DSPEnvironment helpers
+patch_op :: ([ActivePatch] -> [ActivePatch])
+         -> DSPEnvironment
+         -> DSPEnvironment
+patch_op fn (l, (am, ap)) = (l, (am, fn ap))
+
+mod_op :: ([ActiveMod] -> [ActiveMod])
+         -> DSPEnvironment
+         -> DSPEnvironment
+mod_op fn (l, (am, ap)) = (l, (fn am, ap))
+
+
 -- haskell only fn
-dspPatch :: [ActivePatch]
+dspPatch :: DSPEnvironment
          -> ActiveMod
          -> ModOut
          -> ActiveMod
          -> ModIn
-         -> [ActivePatch]
-dspPatch pl s so d di = (1,(s,so),(d,di)):pl
-                -- note this `1` is a fake connection index
-
-
+         -> DSPEnvironment
+dspPatch env s so d di = patch_op(fn s so d di) env
+    where
+        fn s so d di pl = ((1 + length pl),(s,so),(d,di)):pl
 
 -- old
 foreign import ccall "dsp_block.h hs_list"

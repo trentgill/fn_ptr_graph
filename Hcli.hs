@@ -31,11 +31,14 @@ hs_cli = do
     dspEnv <- dspInit
     srcMod <- dspCreateMod (head $ fst dspEnv)
     dstMod <- dspCreateMod (head $ fst dspEnv)
-    let patchPtr = dspPatch (snd $ snd dspEnv)
+    let patchPtr = dspPatch dspEnv
+                            srcMod (head $ ins srcMod)
+                            dstMod (head $ outs dstMod)
+    let patchPtr2 = dspPatch patchPtr
                             srcMod (head $ ins srcMod)
                             dstMod (head $ outs dstMod)
     putStrLn (show dspEnv)
-    putStrLn (show patchPtr)
+    putStrLn (show patchPtr2)
     iState <- fQUIT FState { datastack     = []
                            , input_string  = hoth_defns
                            , output_string = ""
