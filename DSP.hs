@@ -15,8 +15,8 @@ foreign import ccall "dsp_block.h hs_dspInit"
 dspInit :: IO DSPEnvironment
 dspInit = do
     let struct = c_dspInit
-    mlist <- findAvailMods (struct ) []
-    return ( mlist, ([], []))
+    mlist <- findAvailMods struct []
+    return (mlist, ([], []))
 
 isEmptyString :: String -> Bool
 isEmptyString [] = True
@@ -31,30 +31,42 @@ findAvailMods ptr list = do
         else findAvailMods (plusPtr ptr 24)
                            ((str,fp) : list )
 
-foreign import ccall "dsp_block.h hs_dspCreateMod"
-    c_dspAllocMod :: FunPtr () -> Ptr ()
-
-dspCreateMod :: ModAvailable -> IO ActiveMod
-dspCreateMod m = return $ ActiveMod
-    { mtype     = fst m
-    , mindex    = 0 -- needs to be set by environment
-    , address   = c_dspAllocMod $ snd m
-    , ins       = ("in",nullPtr):[]
-    , params    = []
-    , outs      = ("out",nullPtr):[]
-    }
 
 -- DSPEnvironment helpers
-patch_op :: ([ActivePatch] -> [ActivePatch])
+patch_op :: DSPEnvironment
+         -> ([ActivePatch] -> [ActivePatch])
          -> DSPEnvironment
-         -> DSPEnvironment
-patch_op fn (l, (am, ap)) = (l, (am, fn ap))
+patch_op (l, (am, ap)) fn = (l, (am, fn ap))
 
-mod_op :: ([ActiveMod] -> [ActiveMod])
-         -> DSPEnvironment
-         -> DSPEnvironment
-mod_op fn (l, (am, ap)) = (l, (fn am, ap))
+mod_op :: DSPEnvironment
+       -> ([ActiveMod] -> [ActiveMod])
+       -> DSPEnvironment
+mod_op (l, (am, ap)) fn = (l, (fn am, ap))
 
+
+-- Allocate a new module & it to the Runtime Env
+foreign import ccall "dsp_block.h hs_dspCreateMod"
+    c_dspAllocMod :: FunPtr () -> IO (Ptr())
+
+dspCreateMod :: DSPEnvironment
+             -> ModAvailable
+             -> IO DSPEnvironment
+dspCreateMod env m = do
+    newMod <- makeMod m (lastMod env)
+    return $ mod_op env (newMod :)
+    where
+        lastMod :: DSPEnvironment -> Int
+        lastMod (_, ([], _)) = 0
+        lastMod (_, (am, _)) = mindex (head am)
+        makeMod :: ModAvailable -> Int -> IO ActiveMod
+        makeMod m c = return $
+            ActiveMod { mtype     = fst m
+                      , mindex    = c + 1
+                      , address   = c_dspAllocMod $ snd m
+                      , ins       = ("in",nullPtr):[]
+                      , params    = []
+                      , outs      = ("out",nullPtr):[]
+                      }
 
 -- haskell only fn
 dspPatch :: DSPEnvironment
@@ -63,16 +75,6 @@ dspPatch :: DSPEnvironment
          -> ActiveMod
          -> ModIn
          -> DSPEnvironment
-dspPatch env s so d di = patch_op(fn s so d di) env
+dspPatch env s so d di = patch_op env (fn s so d di)
     where
         fn s so d di pl = ((1 + length pl),(s,so),(d,di)):pl
-
--- old
-foreign import ccall "dsp_block.h hs_list"
-    c_list :: Ptr CInt
-
-foreign import ccall "dsp_block.h hs_resolve"
-    c_resolve :: Ptr CInt -> CInt
-
-dspList :: Integer
-dspList = fromIntegral $ c_resolve c_list

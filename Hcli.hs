@@ -29,16 +29,16 @@ foreign export ccall hs_cli :: IO CInt
 hs_cli :: IO CInt
 hs_cli = do
     dspEnv <- dspInit
-    srcMod <- dspCreateMod (head $ fst dspEnv)
-    dstMod <- dspCreateMod (head $ fst dspEnv)
-    let patchPtr = dspPatch dspEnv
-                            srcMod (head $ ins srcMod)
-                            dstMod (head $ outs dstMod)
-    let patchPtr2 = dspPatch patchPtr
-                            srcMod (head $ ins srcMod)
-                            dstMod (head $ outs dstMod)
-    putStrLn (show dspEnv)
-    putStrLn (show patchPtr2)
+    env2 <- dspCreateMod dspEnv (head $ fst dspEnv)
+    env3 <- dspCreateMod env2 $ (fst dspEnv)!!1
+    let m1 = (fst $ snd env3)!!0
+    let m2 = (fst $ snd env3)!!1
+    let patchPtr = dspPatch env3
+                            m1
+                            (head $ ins m1)
+                            m2
+                            (head $ outs m2)
+    putStrLn (show patchPtr)
     iState <- fQUIT FState { datastack     = []
                            , input_string  = hoth_defns
                            , output_string = ""

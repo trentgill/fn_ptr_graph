@@ -88,7 +88,7 @@ native_dict = [ (".S"       ,Not  ,FFn  fDOTESS   )
 
 -- initial dsp-graph-words
 mDOTESS :: FState -> FState
-mDOTESS = fDOT . stack_op( (FNum dspList) : )
+mDOTESS = fDOT . stack_op( (FNum 666) : ) --fake data
 
 mNEW :: FState -> FState
 mNEW = output_append("takes mod-type. returns id\n")

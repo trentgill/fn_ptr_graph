@@ -94,7 +94,7 @@ type DSPRuntime = ( [ActiveMod], [ActivePatch] )
 data ActiveMod = ActiveMod
                { mtype   :: ModType
                , mindex  :: Int
-               , address :: Ptr ()
+               , address :: IO (Ptr ())
                , ins     :: [ModIn]
                , params  :: [ModParam]
                , outs    :: [ModOut]
