@@ -15,6 +15,8 @@ import Foreign.C.String
 -- -- Print String
 -- -- Dictionary
 
+type HothS = (FState, DSPEnvironment)
+
 data FState = FState
             { datastack     :: FDataStack
             , input_string  :: FInput

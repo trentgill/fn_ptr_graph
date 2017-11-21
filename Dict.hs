@@ -221,18 +221,19 @@ dsp_act (None) s = return(s)
 
 --quit loop
 --here is were ABORT error checking should occur
-fQUIT :: FState -> IO FState
-fQUIT s@(FState {abort_flag   = True}) = do
-    return(output_append("abort!\n") s {abort_flag = False})
-fQUIT s@(FState {input_string = []})   = do
+fQUIT :: HothS
+      -> IO HothS
+fQUIT (s@(FState {abort_flag   = True}), d) = do
+    return(output_append("abort!\n") s {abort_flag = False}, d)
+fQUIT (s@(FState {input_string = []}), d) = do
     unstate <- dsp_act (dsp_action s) s
-    return(output_append("ok.\n") $ unstate {dsp_action = None})
-fQUIT s@(FState {compile_flag = True }) = do
+    return(output_append("ok.\n") $ unstate {dsp_action = None}, d)
+fQUIT (s@(FState {compile_flag = True }), d) = do
     unstate <- dsp_act (dsp_action s) s
-    fQUIT . fCOMPILE $ unstate {dsp_action = None}
-fQUIT s@(FState {compile_flag = False}) = do
+    fQUIT (fCOMPILE $ unstate {dsp_action = None}, d)
+fQUIT (s@(FState {compile_flag = False}), d) = do
     unstate <- dsp_act (dsp_action s) s
-    fQUIT . fINTERPRET $ unstate {dsp_action = None}
+    fQUIT (fINTERPRET $ unstate {dsp_action = None}, d)
 
 
 --interpret and parse

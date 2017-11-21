@@ -14,6 +14,21 @@ import Dict
 import DSP
 import FTypes
 
+-- TODO
+--
+-- dsp is now being sent to fQUIT. next we need to make it do smething!
+-- this should happen in the dsp_act section.
+-- start with print & create mod bc the fns already work.
+--
+-- write fns to correctly populate ins, params & outs from c
+-- -- will require expanded c-header stubs
+-- -- perhaps time to refactor them to just be a data blob
+-- -- don't really need to rewrite that fn in each header
+-- -- just make 1 data-accessor in the dsp_cli.h
+-- -- NOT IO, bc they are guaranteed to match the mtype
+--
+-- dspInit should instantiate the IO module
+
 -- forth dictionary
 -- nb: need at least 1 space after ;
 hoth_defns = ": SQ (     a -- a^2 ) DUP * ;          "
@@ -31,15 +46,15 @@ hs_cli = do
     dspEnv <- dspInit
     env2 <- dspCreateMod dspEnv (head $ fst dspEnv)
     env3 <- dspCreateMod env2 $ (fst dspEnv)!!1
-    let m1 = (fst $ snd env3)!!0
+    let m1 = (fst $ snd env3)!!0 -- grabbing direct indexes (dangerous)
     let m2 = (fst $ snd env3)!!1
-    let patchPtr = dspPatch env3
-                            m1
+    let patchPtr = dspPatch (env3)
+                            (m1)
                             (head $ ins m1)
-                            m2
+                            (m2)
                             (head $ outs m2)
     putStrLn (show patchPtr)
-    iState <- fQUIT FState { datastack     = []
+    iState <- fQUIT (FState { datastack     = []
                            , input_string  = hoth_defns
                            , output_string = ""
                            , dictionary    = native_dict
@@ -49,18 +64,19 @@ hs_cli = do
                            , abort_flag    = False
                            , dsp_action    = None
                            }
+                    , patchPtr)
     repl iState
 
-repl :: FState -> IO CInt -- takes state as input
-repl state = do
+repl :: HothS
+     -> IO CInt
+repl (state, dsp) = do
     accept_me <- getLine
-    newState <- fQUIT
-              . (fACCEPT accept_me)
-              $ state
-    putStrLn (output_string newState)
-    if (quit_flag newState)
+    newState <- fQUIT (fACCEPT accept_me $ state
+                      , dsp)
+    putStrLn (output_string $ fst newState)
+    if (quit_flag $ fst newState)
         then return (1)
-        else repl . clear $ newState
+        else repl (clear $ fst newState, dsp)
     where
         fACCEPT a st = st { input_string = a }
         clear s = s { output_string = "" }
