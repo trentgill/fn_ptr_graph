@@ -204,8 +204,10 @@ fROT = stack_op(dRot)
           dRot (tos:nxt:thd:stk) = thd:tos:nxt:stk
 
 --dsp actions (implements queued dsp graph changes)
-dsp_act :: DSPAction -> FState -> IO FState
-dsp_act (None) s = return(s)
+dsp_act :: DSPAction
+        -> DSPEnvironment
+        -> IO DSPEnvironment
+dsp_act (None) d = return(d)
 -- dsp_act (NewMod m) s = do
 --     let modinstance = dspCreateMod m
 --     putStrLn (show modinstance)
@@ -223,17 +225,29 @@ dsp_act (None) s = return(s)
 --here is were ABORT error checking should occur
 fQUIT :: HothS
       -> IO HothS
-fQUIT (s@(FState {abort_flag   = True}), d) = do
-    return(output_append("abort!\n") s {abort_flag = False}, d)
-fQUIT (s@(FState {input_string = []}), d) = do
-    unstate <- dsp_act (dsp_action s) s
-    return(output_append("ok.\n") $ unstate {dsp_action = None}, d)
-fQUIT (s@(FState {compile_flag = True }), d) = do
-    unstate <- dsp_act (dsp_action s) s
-    fQUIT (fCOMPILE $ unstate {dsp_action = None}, d)
-fQUIT (s@(FState {compile_flag = False}), d) = do
-    unstate <- dsp_act (dsp_action s) s
-    fQUIT (fINTERPRET $ unstate {dsp_action = None}, d)
+fQUIT ( s@(FState {abort_flag   = True})
+      , d
+      ) = do
+        return ( output_append("abort!\n") s {abort_flag = False}
+               , d )
+fQUIT ( s@(FState {input_string = []})
+      , d
+      ) = do
+        unstate <- dsp_act (dsp_action s) d
+        return ( output_append("ok.\n") $ s {dsp_action = None}
+               , unstate )
+fQUIT ( s@(FState {compile_flag = True })
+      , d
+      ) = do
+        unstate <- dsp_act (dsp_action s) d
+        fQUIT ( fCOMPILE $ s {dsp_action = None}
+              , unstate )
+fQUIT ( s@(FState {compile_flag = False})
+      , d
+      ) = do
+        unstate <- dsp_act (dsp_action s) d
+        fQUIT ( fINTERPRET $ s {dsp_action = None}
+              , unstate )
 
 
 --interpret and parse

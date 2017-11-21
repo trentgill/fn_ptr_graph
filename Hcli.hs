@@ -20,6 +20,14 @@ import FTypes
 -- this should happen in the dsp_act section.
 -- start with print & create mod bc the fns already work.
 --
+-- nb: dsp_act now takes an action & a DSPEnv, returns DSPEnv
+-- this means dsp_actions should be completely isolated from forth
+-- only used for IO to the C system (things that can't be done directly)
+-- nb: 'getters' should be able to act without a dsp_action
+--     'patches' also need not touch dsp_act
+-- -- it's really only for createmod & set param (delete mod)
+-- -- perhaps 'createpatch' needs to set a flag to force recompilation?
+--
 -- write fns to correctly populate ins, params & outs from c
 -- -- will require expanded c-header stubs
 -- -- perhaps time to refactor them to just be a data blob
