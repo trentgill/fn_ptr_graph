@@ -36,6 +36,12 @@ import FTypes
 -- -- NOT IO, bc they are guaranteed to match the mtype
 --
 -- dspInit should instantiate the IO module
+--
+-- both `.` and `.S` should act instantly through the same mechanism
+-- as dsp_act. then there's less tricky value passing & ordering issues
+-- to repl. thus repl expects sentences, while fQUIT expects words.
+-- -- repl should print the forth 'ok' which says "i understood that
+-- sentence" unless the 'abort_flag' is raised
 
 -- forth dictionary
 -- nb: need at least 1 space after ;
