@@ -13,6 +13,7 @@ import Data.Char
 import Dict
 import DSP
 import FTypes
+import System.IO
 
 -- TODO
 --
@@ -84,6 +85,8 @@ hs_cli = do
 repl :: HothS
      -> IO CInt
 repl (state, dsp) = do
+    hSetBuffering stdout NoBuffering
+    putStr "> "
     accept_me <- getLine
     newState <- fQUIT (fACCEPT accept_me $ state
                       , dsp)
