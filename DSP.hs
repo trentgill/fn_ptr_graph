@@ -36,7 +36,9 @@ patch_op :: DSPEnvironment
          -> ([ActivePatch] -> [ActivePatch])
          -> DSPEnvironment
 patch_op (l, graph) fn
-    = (l, graph { actPatches = fn (actPatches graph) })
+    = (l, graph { actPatches = fn (actPatches graph)
+                , recompile  = True
+                })
 
 mod_op :: DSPEnvironment
        -> ([ActiveMod] -> [ActiveMod])
@@ -79,3 +81,23 @@ dspPatch :: DSPEnvironment
 dspPatch env s so d di = patch_op env (fn s so d di)
     where
         fn s so d di pl = ((1 + length pl),(s,so),(d,di)):pl
+
+
+-- and here's the DSP compiler!!
+-- it really just calls some C hooks
+-- but the decision of *which* hooks to call is the hard part!
+dsp_recompile :: DSPEnvironment
+              -> IO DSPEnvironment
+dsp_recompile (l, e@(ModGraph {recompile=False})) = return (l, e)
+dsp_recompile (l, e) = do -- this is the compiler
+    return (l, e { recompile = False })
+
+    -- traverse the active patches starting with IO
+    -- work from dest->source (backward) until 
+    --
+    --
+    --
+    --
+    --
+    --
+    --

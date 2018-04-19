@@ -3,6 +3,7 @@
 module Hcli where
 
 -- FFI for being called by C
+import Control.Monad  -- 'when'
 import Foreign.Ptr
 import Foreign.C.Types
 import Foreign.C.String
@@ -68,7 +69,8 @@ hs_cli = do
                             (head $ ins m1)
                             (m2)
                             (head $ outs m2)
-    putStrLn (show patchPtr)
+    e4 <- dsp_recompile patchPtr
+    putStrLn (show e4)
     iState <- fQUIT (FState { datastack     = []
                            , input_string  = hoth_defns
                            , output_string = ""
@@ -79,7 +81,7 @@ hs_cli = do
                            , abort_flag    = False
                            , dsp_action    = None
                            }
-                    , patchPtr)
+                    , e4)
     repl iState
 
 repl :: HothS
