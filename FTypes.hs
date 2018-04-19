@@ -66,17 +66,23 @@ instance Show FStackItem where
     show (FList x) = show (head x) ++ show (tail x)
 
 -- DSP Types
+--dep
+type DSPEnvironment = ( [ModAvailable], ModGraph )
 
-type DSPEnvironment = ( [ModAvailable], DSPRuntime )
+--data DSPEnvR = DSPEnvR
+--             { ModList  :: [Modavailable]
+--             , ModGraph :: DSPRuntime
+--             }
 
 instance {-# OVERLAPS #-} Show DSPEnvironment where
-    show (mlist, (mods, patches)) =
+    show (mlist, graph) =
         "Mods:\t"
      ++ concat (map (++ "\n\t")(map (show . fst) mlist))
-     ++ "\nRuntime:\nMods:\t" ++ shows (length mods) "\n"
-     ++ concat (map (++ "\n")(map (show) mods))
-     ++ "\nPaxes:\t" ++ shows (length patches) "\n"
-     ++ concat (map (++ "\n")(map (show) patches))
+     ++ "\nRuntime:\n"
+     ++ "Mods:\t" ++ shows (length . actMods $ graph) "\n"
+     ++ concat (map (++ "\n")(map (show) (actMods graph)))
+     ++ "\nPaxes:\t" ++ shows (length . actPatches $ graph) "\n"
+     ++ concat (map (++ "\n")(map (show) (actPatches graph)))
      ++ "\n"
 
 type ModAvailable = ( ModType, FunPtr () )
@@ -91,7 +97,11 @@ type InName = String
 type ParamName = String
 type OutName = String
 
-type DSPRuntime = ( [ActiveMod], [ActivePatch] )
+data ModGraph = ModGraph
+              { actMods    :: [ActiveMod]
+              , actPatches :: [ActivePatch]
+              , recompile  :: Bool
+              }
 
 data ActiveMod = ActiveMod
                { mtype   :: ModType

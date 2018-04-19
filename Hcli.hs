@@ -59,10 +59,10 @@ foreign export ccall hs_cli :: IO CInt
 hs_cli :: IO CInt
 hs_cli = do
     dspEnv <- dspInit
-    env2 <- dspCreateMod dspEnv (head $ fst dspEnv)
+    env2 <- dspCreateMod dspEnv $ (fst dspEnv)!!0
     env3 <- dspCreateMod env2 $ (fst dspEnv)!!1
-    let m1 = (fst $ snd env3)!!0 -- grabbing direct indexes (dangerous)
-    let m2 = (fst $ snd env3)!!1
+    let m1 = (actMods $ snd env3)!!0 -- grabbing direct indexes (dangerous)
+    let m2 = (actMods $ snd env3)!!1
     let patchPtr = dspPatch (env3)
                             (m1)
                             (head $ ins m1)
