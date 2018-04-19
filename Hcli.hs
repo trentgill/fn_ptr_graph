@@ -72,15 +72,15 @@ hs_cli = do
     e4 <- dsp_recompile patchPtr
     putStrLn (show e4)
     iState <- fQUIT (FState { datastack     = []
-                           , input_string  = hoth_defns
-                           , output_string = ""
-                           , dictionary    = native_dict
-                           , compile_flag  = False
-                           , return_stack  = []
-                           , quit_flag     = False
-                           , abort_flag    = False
-                           , dsp_action    = None
-                           }
+                            , input_string  = hoth_defns
+                            , output_string = ""
+                            , dictionary    = native_dict
+                            , compile_flag  = False
+                            , return_stack  = []
+                            , quit_flag     = False
+                            , abort_flag    = False
+                            , dsp_action    = None
+                            }
                     , e4)
     repl iState
 
