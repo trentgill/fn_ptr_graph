@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-uint16_t block_size;
+#define block_size ((uint16_t)64)
 
 typedef struct m_in {
     float*  src;
