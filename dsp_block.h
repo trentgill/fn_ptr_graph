@@ -53,7 +53,6 @@ typedef struct {
 
 int hs_addone( int in );
 int* hs_list( void );
-int hs_resolve( int* io ); // cheat out of IO()
 
 //const char* hs_dspInit( void );
 const module_descriptor_t* hs_dspInit( void );

@@ -40,12 +40,12 @@ void module_process_frame(float* in, float* out, uint16_t b_size)
         zero_frame( out, b_size );
         return;
     }
-    zero_frame( out, b_size );
+    //zero_frame( out, b_size );
 // clear the output buffer
-    /*float* outP = out;
+    float* outP = out;
     for( uint16_t i=0; i<b_size; i++ ){
         *outP++ = 0.0;
-    }*/
+    }
 // process the graph
     // set output of sine_osc to be the input of IO
     //fprintf(stderr, "%p", _dsp.modules[0]->ins[0].src);
@@ -87,12 +87,6 @@ void g_io_process( module_t* box )
 int* hs_list( void )
 {
     return &(_dsp.m_count);
-}
-
-// cheat out of haskell IO from any raw ptr access
-int hs_resolve( int* io )
-{
-    return *io;
 }
 
 const module_descriptor_t* hs_dspInit( void )
