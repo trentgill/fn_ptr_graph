@@ -14,8 +14,7 @@ foreign import ccall "dsp_block.h hs_dspInit"
 
 dspInit :: IO DSPEnvironment
 dspInit = do
-    let struct = c_dspInit
-    mlist <- findAvailMods struct []
+    mlist <- findAvailMods c_dspInit []
     return (mlist, ModGraph { actMods    = []
                             , actPatches = []
                             , recompile  = False
