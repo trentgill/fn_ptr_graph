@@ -10,6 +10,7 @@ GHC = ghc
 SRC = main.c \
       dsp_block.c \
       $(WRLIB)/wrMath.c \
+	  $(WRDSP)/wrCliHelpers.c \
       $(WRDSP)/wrFilterCli.c \
       $(WRDSP)/wrFilter.c \
       $(WRDSP)/wrOscSineCli.c \

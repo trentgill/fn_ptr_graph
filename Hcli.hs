@@ -60,15 +60,15 @@ foreign export ccall hs_cli :: IO CInt
 hs_cli :: IO CInt
 hs_cli = do
     dspEnv <- dspInit
-    env2 <- dspCreateMod dspEnv $ (fst dspEnv)!!0
+    env2 <- dspCreateMod dspEnv $ (fst dspEnv)!!3
     env3 <- dspCreateMod env2 $ (fst dspEnv)!!1
-    let m1 = (actMods $ snd env3)!!0 -- grabbing direct indexes (dangerous)
-    let m2 = (actMods $ snd env3)!!1
+    let sinez = (actMods $ snd env3)!!0
+    let ioz   = (actMods $ snd env3)!!1
     let patchPtr = dspPatch (env3)
-                            (m1)
-                            (head $ ins m1)
-                            (m2)
-                            (head $ outs m2)
+                            (sinez)
+                            (head $ outs sinez)
+                            (ioz)
+                            (head $ ins ioz)
     e4 <- dsp_recompile patchPtr
     putStrLn (show e4)
     iState <- fQUIT (FState { datastack     = []

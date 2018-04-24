@@ -1,7 +1,7 @@
 #pragma once
 
 // Command Line Interface
-#define CLI_ENABLED
+/*#define CLI_ENABLED
 
 #include <stdint.h>
 
@@ -43,7 +43,7 @@ typedef struct patch {
     module_t* dst_module;
     m_in_t*   dst;
 } patch_t;
-
+ */
 //
 // then dsp graph traversal just uses
 // patch_t dsp_patches[];

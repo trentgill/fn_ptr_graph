@@ -8,23 +8,13 @@
 // dsp environment config
 DSP_env_t _dsp;
 
-filter_lp1_t filt;
-osc_sine_t   sineo[3];
-
 void module_init( void )
 {
     // initialize the DSP_env_t
     _dsp.m_count = 0;
     _dsp.p_count = 0;
 
-    // old inits for some test modules
-    for(uint8_t p=0;p<3;p++){
-        osc_sine_init( &sineo[p] ); _dsp.m_count++;
-        float tt = ((float)(p)*1.5 + 1.0) * 0.02;
-        osc_sine_time( &sineo[p], tt );
-    }
-    lp1_init( &filt ); _dsp.m_count++;
-    lp1_set_coeff( &filt, 0.0001 );
+    // init standard modules here?
 }
 
 #ifdef SINGLE_SAMPLE
@@ -42,43 +32,28 @@ void zero_frame( float* out, uint16_t b_size )
 }
 void module_process_frame(float* in, float* out, uint16_t b_size)
 {
-    //zero_frame( out, b_size );
-    //block_size = b_size;
-    float  tmp[b_size];
-    float  tmpx[b_size];
-    float  tmpy[b_size];
-    float* out2 = out;
-    float* tmp2 = tmp;
-    float* tmpx2 = tmpx;
-    float* tmpy2 = tmpy;
-    uint16_t i;
-
 // zero out an empty graph
-    if( !_dsp.m_count || !_dsp.p_count ){
+    if( !_dsp.p_count ){
         zero_frame( out, b_size );
         return;
     }
-
-    for( i=0; i<b_size; i++ ){
-        *tmpx2++ = 1.0;
-        *tmpy2++ = 0.0;
-        *tmp2++ = 0.0;
-        *out2++ = 0.0;
+// clear the output buffer
+    float* outP = out;
+    for( uint16_t i=0; i<b_size; i++ ){
+        *outP++ = 0.0;
     }
-    for( uint16_t p=0; p<3; p++ ){
-        out2 = out;
-        tmp2 = tmp;
-        osc_sine_process_v( &sineo[p]
-            , b_size
-            , tmpx
-            , tmpy
-            , tmp );
-        for( i=0; i<b_size; i++ ){
-            *out2++ += *tmp2++;
-        }
+// process the graph
+    // set IO destination to dsp output
+    _dsp.modules[0]->outs[0].dst = out;
+    //_dsp.modules[1]->outs[0].dst = _dsp.modules[0]->ins
+// this list is the compiled order!
+// probably needs a 'compiled' copy that is listed in order
+// or could have a list of **s.
+    for( uint16_t m=0; m<_dsp.m_count; m++ ){
+        _dsp.modules[m]->process_fnptr( _dsp.modules[m] );
     }
-    mul_vf_f(out, 0.0, out, b_size);
-//    lp1_step_v( &filt, tmp, out, b_size );
+// volume down
+    mul_vf_f(out, 0.1, out, b_size);
 }
 #endif
 

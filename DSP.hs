@@ -73,14 +73,15 @@ dspCreateMod env m = do
 
 -- haskell only fn
 dspPatch :: DSPEnvironment
-         -> ActiveMod
+         -> ActiveMod         -- source
          -> ModOut
-         -> ActiveMod
+         -> ActiveMod         -- destination
          -> ModIn
          -> DSPEnvironment
 dspPatch env s so d di = patch_op env (fn s so d di)
     where
         fn s so d di pl = ((1 + length pl),(s,so),(d,di)):pl
+
 
 
 -- and here's the DSP compiler!!
@@ -93,8 +94,17 @@ dsp_recompile (l, e) = do -- this is the compiler
     return (l, e { recompile = False })
 
     -- traverse the active patches starting with IO
-    -- work from dest->source (backward) until 
+    -- work from dest->source (backward) until no inputs
     --
+        -- run a C function to change the output-destination pointer
+        -- in future, any connections with multiples add a helper
+        -- block which just copies buffers to multiple destinations
+        -- thus the only blocks with variable # of endpoints are the
+        -- helper blocks, and all dsp has standard single points
+        --
+        -- further, this means that 'mixpoints' can have different
+        -- mix math. eg additive, min/max etc. but also more complex
+        -- algos to allow limiting / saturation / compression / scaling
     --
     --
     --

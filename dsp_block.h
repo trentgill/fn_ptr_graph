@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "wrCliHelpers.h"
 #include "wrFilterCli.h"
 #include "wrOscSineCli.h"
 #include "wrLpGateCli.h"
