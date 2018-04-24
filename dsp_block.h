@@ -17,6 +17,10 @@ void module_process_frame( float*   in
                          , float*   out
                          , uint16_t b_size
                          );
+
+module_t* graph_io_init( void );
+void g_io_process( module_t* box );
+
 #define MODULE_LIMIT 100
 #define PATCH_LIMIT  100
 
@@ -29,7 +33,7 @@ typedef struct {
 // List of all the DSP objects that are available to the graph
 // nb: these _init fns actually need to be custom accessor fns
 static const module_descriptor_t modules[] =
-    { { "IO"              , NULL                }
+    { { "IO"              , graph_io_init       }
     , { "LPF1"            , graph_lp1_init      }
     , { "SINE"            , graph_osc_sine_init }
     , { "LPG"             , graph_lpgate_init   }
@@ -57,14 +61,18 @@ const module_descriptor_t* hs_dspInit( void );
 
 typedef module_t* (func_t)( void );
 module_t* hs_dspCreateMod( func_t fn );
-int* hs_dspGetIns( module_t* box );
-int* hs_dspGetParams( module_t* box );
-// should also pass environment so it's not global
 int hs_dspPatch( module_t*  srcMod
                , int        srcOutIx
                , module_t*  dstMod
                , int        dstInIx
                );
+int hs_dspGetOutCount( module_t* box );
+m_out_t* hs_dspGetOut( module_t* box, int ix );
+
+int* hs_dspGetIns( module_t* box );
+int* hs_dspGetParams( module_t* box );
+// should also pass environment so it's not global
+void hs_patchCount( int count );
 //DSP_env_t* hs_list( void )
 
 // thinking about haskell FFI access here
