@@ -101,6 +101,7 @@ int hs_dspPatch( module_t*  srcMod
 {
     if( _dsp.p_count >= PATCH_LIMIT ){ return 1; } // failed, too many patches
 
+
     _dsp.patches[_dsp.p_count] = malloc( sizeof( patch_t ) );
     patch_t* new = _dsp.patches[_dsp.p_count];
 
@@ -108,6 +109,10 @@ int hs_dspPatch( module_t*  srcMod
     new->src        = &(srcMod->outs[srcOutIx]);
     new->dst_module = dstMod;
     new->dst        = &(dstMod->ins[dstInIx]);
+
+    new->dst->src = new->src->dst; // TERRIBLE NAMES
+    //_dsp.modules[1]->ins[0].src = _dsp.modules[2]->outs[0].dst; // manual patch
+
     return 0; // success
 }
 

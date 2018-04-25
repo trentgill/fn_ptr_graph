@@ -64,11 +64,11 @@ hs_cli = do
     env3 <- dspCreateMod env2 $ (fst dspEnv)!!1
     let sinez = (actMods $ snd env3)!!0
     let ioz   = (actMods $ snd env3)!!1
-    let patchPtr = dspPatch (env3)
-                            (sinez)
-                            (head $ outs sinez)
-                            (ioz)
-                            (head $ ins ioz)
+    patchPtr <- dspPatch (env3)
+                         (sinez)
+                         (head $ outs sinez)
+                         (ioz)
+                         (head $ ins ioz)
     e4 <- dsp_recompile patchPtr
     --putStrLn (show e4)
     iState <- fQUIT (FState { datastack     = []

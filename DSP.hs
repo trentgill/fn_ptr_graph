@@ -155,14 +155,15 @@ discoverParams ptr count = do
             return (str, castPtrToFunPtr setter, 0)
 
 
--- haskell only fn
+-- might need to call c_dspPatch more than once if multiple source or dest
 dspPatch :: DSPEnvironment
          -> ActiveMod         -- source
          -> ModOut
          -> ActiveMod         -- destination
          -> ModIn
-         -> DSPEnvironment
-dspPatch env s so d di = patch_op env (fn s so d di)
+         -> IO DSPEnvironment
+dspPatch env s so d di = do
+    return $ patch_op env (fn s so d di)
     where
         fn s so d di pl = ((1 + length pl),(s,so),(d,di)):pl
 
