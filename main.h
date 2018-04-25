@@ -7,4 +7,4 @@
 
 extern void module_init( void );
 
-extern void module_process_frame(float* in, float* out, uint16_t b_size);
+extern void module_process_frame(float* in, float* out, int b_size);

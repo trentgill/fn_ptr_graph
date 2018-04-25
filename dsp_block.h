@@ -13,9 +13,9 @@
 
 void module_init( void );
 
-void module_process_frame( float*   in
-                         , float*   out
-                         , uint16_t b_size
+void module_process_frame( float* in
+                         , float* out
+                         , int    b_size
                          );
 
 module_t* graph_io_init( int b_size );

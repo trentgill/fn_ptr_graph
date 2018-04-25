@@ -19,7 +19,7 @@ void module_init( void )
 }
 
 #ifdef SINGLE_SAMPLE
-void module_process_frame(float* in, float* out, uint16_t b_size)
+void module_process_frame(float* in, float* out, int b_size)
 {
     *out++ = 0.0;
 }
@@ -30,54 +30,20 @@ void zero_frame( float* out, uint16_t b_size )
         *out++ = 0.0;
     }
 }
-void module_process_frame(float* in, float* out, uint16_t b_size)
+void module_process_frame(float* in, float* out, int b_size)
 {
-// zero out an empty graph
-    if( !_dsp.p_count ){
+    if( !_dsp.p_count ){ // zero out an empty graph
         zero_frame( out, b_size );
         return;
     }
-    //zero_frame( out, b_size );
-// clear the output buffer
-    /*float* outP = out;
-    for( uint16_t i=0; i<b_size; i++ ){
-        *outP++ = 0.0;
-    }*/
-// process the graph
-    // set output of sine_osc to be the input of IO
-    //fprintf(stderr, "%p", _dsp.modules[2]->outs[0].dst);
-    _dsp.modules[1]->ins[0].src = _dsp.modules[2]->outs[0].dst;
+    _dsp.modules[1]->ins[0].src = _dsp.modules[2]->outs[0].dst; // manual patch
 
-// this list is the compiled order!
-// probably needs a 'compiled' copy that is listed in order
-// or could have a list of **s.
-    // counting down!
-
-    for( uint16_t m=(_dsp.m_count); m>=1; m-- ){
+    for( int m=(_dsp.m_count); m>=1; m-- ){ // dsp processing
         (*_dsp.modules[m]->process_fnptr)( _dsp.modules[m], b_size );
     }
-
-    //(*_dsp.modules[2]->process_fnptr)( _dsp.modules[2], b_size );
-    //(*_dsp.modules[1]->process_fnptr)( _dsp.modules[1], b_size );
-    //g_osc_sine_process( _dsp.modules[2] );
-    //g_osc_( out );
-// copy from IO & turn volume down
-
-    /* float tmpx[b_size];
-    float tmpy[b_size];
-    for( int s=0; s<b_size; s++ ){
-        tmpx[s] = 1.0;
-        tmpy[s] = 0.0;
+    for( int s=0; s<b_size; s++ ){ // output
+        out[s] = _dsp.modules[1]->outs[0].dst[s];
     }
-    module_t* boxy = _dsp.modules[2];
-    osc_sine_process_v( boxy->self
-                      , b_size
-                      , tmpx
-                      , tmpy
-                      , out );
-*/
-    mul_vf_f(_dsp.modules[1]->outs[0].dst, 0.5, out, b_size);
-    //mul_vf_f(out, 0.4, out, b_size);
 }
 #endif
 
