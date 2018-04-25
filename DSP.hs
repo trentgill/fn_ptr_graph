@@ -55,7 +55,7 @@ dspCreateMod :: DSPEnvironment
              -> IO DSPEnvironment
 dspCreateMod env m = do
     newMod <- makeMod m (lastMod env)
-    putStrLn("newMod")
+    --putStrLn("newMod")
     return $ mod_op env (newMod :)
     where
         lastMod :: DSPEnvironment -> Int
@@ -72,13 +72,18 @@ dspCreateMod env m = do
                                  }
             newAddr <- address amod
             newOuts <- discoverOuts newAddr 0
-            return (amod { outs = newOuts })
+            newIns <- discoverIns newAddr 0
+            newParams <- discoverParams newAddr 0
+            return (amod { outs   = newOuts
+                         , ins    = newIns
+                         , params = newParams
+                         })
 
 -- helper functions to get info from module_t* box
 foreign import ccall "dsp_block.h hs_dspGetOutCount"
     c_dspGetOutCount :: Ptr() -> (CInt)
 foreign import ccall "dsp_block.h hs_dspGetOut"
-    c_dspGetOut :: Ptr() -> Int -> Ptr()
+    c_dspGetOut :: Ptr() -> Int -> Ptr(Ptr())
 
 discoverOuts :: Ptr() -> Int -> IO [ModOut]
 discoverOuts ptr count = do
@@ -93,8 +98,61 @@ discoverOuts ptr count = do
         dspThisOut p i = do
             let addr = c_dspGetOut p i
             str <- peekCString $ castPtr $ plusPtr addr 8
+            fadr <- peek addr
+            return (str, castPtr fadr)
+
+foreign import ccall "dsp_block.h hs_dspGetInCount"
+    c_dspGetInCount :: Ptr() -> (CInt)
+foreign import ccall "dsp_block.h hs_dspGetIn"
+    c_dspGetIn :: Ptr() -> Int -> Ptr()
+
+discoverIns :: Ptr() -> Int -> IO [ModIn]
+discoverIns ptr count = do
+    if count >= (fromIntegral $ c_dspGetInCount ptr)
+        then return $ []
+        else do
+            tIn <- dspThisIn ptr count
+            nIns <- discoverIns ptr (count+1)
+            return $ tIn : nIns
+    where
+        dspThisIn :: Ptr() -> Int -> IO ModIn
+        dspThisIn p i = do
+            let addr = c_dspGetIn p i
+            str <- peekCString $ castPtr $ plusPtr addr 8
             return (str, castPtr addr)
-            --return("",nullPtr)
+
+-- A bunch of junk to support function pointers for param get/set
+type Getter = Ptr() -> IO Float
+type Setter = Ptr() -> Float -> IO ()
+
+-- we receive raw addresses for getters and setters
+-- we know they are of the type Getter and Setter
+-- but in order for haskell to have access, they need to be unwrapped?
+
+foreign import ccall "dsp_block.h hs_dspGetParamCount"
+    c_dspGetParamCount :: Ptr() -> (CInt)
+foreign import ccall "dsp_block.h hs_dspGetParam"
+    c_dspGetParam :: Ptr() -> Int -> Ptr()
+
+foreign import ccall "dynamic"
+    c_getCaller :: FunPtr Getter -> Getter
+
+
+discoverParams :: Ptr() -> Int -> IO [ModParam]
+discoverParams ptr count = do
+    if count >= (fromIntegral $ c_dspGetParamCount ptr)
+        then return $ []
+        else do
+            tParam <- dspThisParam ptr count
+            nParams <- discoverParams ptr (count+1)
+            return $ tParam : nParams
+    where
+        dspThisParam :: Ptr() -> Int -> IO ModParam
+        dspThisParam p i = do
+            let addr = c_dspGetParam p i -- getter fnptr
+            let setter = plusPtr addr 8     -- fnptr
+            str <- peekCString $ castPtr $ plusPtr setter 8
+            return (str, castPtrToFunPtr setter, 0)
 
 
 -- haskell only fn
@@ -119,8 +177,7 @@ dsp_recompile :: DSPEnvironment
 dsp_recompile (l, e@(ModGraph {recompile=False})) = return (l, e)
 dsp_recompile (l, e) = do -- this is the compiler
     c_patchCount( length $ actPatches e )  -- tell C how many patches exist
-    putStrLn("patch cnt ")
-    putStrLn( show . length $ actPatches e )
+    --putStrLn( show . length $ actPatches e )
     return (l, e { recompile = False })
 
     -- traverse the active patches starting with IO

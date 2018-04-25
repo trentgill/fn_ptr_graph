@@ -70,7 +70,7 @@ hs_cli = do
                             (ioz)
                             (head $ ins ioz)
     e4 <- dsp_recompile patchPtr
-    putStrLn (show e4)
+    --putStrLn (show e4)
     iState <- fQUIT (FState { datastack     = []
                             , input_string  = hoth_defns
                             , output_string = ""

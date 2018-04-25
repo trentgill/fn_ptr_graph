@@ -43,7 +43,7 @@ HsFFI=/usr/lib/ghc/include/
 
 HCINCLUDES = -I$(HsFFI)
 
-HCFLAGS = -lm -lc -lsoundio -D
+HCFLAGS = -O0 -lm -lc -lsoundio -D
 HCFLAGS += $(DEFS) -I. -I./ $(INCLUDES) $(HCINCLUDES)
 
 LDFLAGS =

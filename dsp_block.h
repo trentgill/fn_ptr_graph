@@ -18,8 +18,8 @@ void module_process_frame( float*   in
                          , uint16_t b_size
                          );
 
-module_t* graph_io_init( void );
-void g_io_process( module_t* box );
+module_t* graph_io_init( int b_size );
+void g_io_process( module_t* box, int b_size );
 
 #define MODULE_LIMIT 100
 #define PATCH_LIMIT  100
@@ -58,7 +58,7 @@ int* hs_list( void );
 const module_descriptor_t* hs_dspInit( void );
 //DSP_env_t* hs_dspInit( void );
 
-typedef module_t* (func_t)( void );
+typedef module_t* (func_t)( int b_size );
 module_t* hs_dspCreateMod( func_t fn );
 int hs_dspPatch( module_t*  srcMod
                , int        srcOutIx
@@ -67,6 +67,12 @@ int hs_dspPatch( module_t*  srcMod
                );
 int hs_dspGetOutCount( module_t* box );
 m_out_t* hs_dspGetOut( module_t* box, int ix );
+
+int hs_dspGetInCount( module_t* box );
+m_in_t* hs_dspGetIn( module_t* box, int ix );
+
+int hs_dspGetParamCount( module_t* box );
+m_param_t* hs_dspGetParam( module_t* box, int ix );
 
 int* hs_dspGetIns( module_t* box );
 int* hs_dspGetParams( module_t* box );

@@ -72,7 +72,7 @@ static void write_callback(struct SoundIoOutStream *outstream, int frame_count_m
     struct SoundIoChannelArea *areas;
     int err;
     int frames_left = frame_count_max;
-
+//fprintf(stderr, "%i\n", frames_left);
     for (;;) {
         int frame_count = frames_left;
         if ((err = soundio_outstream_begin_write(outstream, &areas, &frame_count))) {
@@ -101,6 +101,7 @@ static void write_callback(struct SoundIoOutStream *outstream, int frame_count_m
 #else /* block process  */
         // nb: these should be doubles for desktop applications
         // assuming a single channel rn
+//fprintf(stderr, "%i\n", frames_left);
         float in[frame_count];
         float out[frame_count];
         // read_sample into the in[] buffer
@@ -282,7 +283,7 @@ int main(int argc, char **argv) {
     }
 
 //    fprintf(stderr, "Software latency: %f\n", outstream->software_latency);
-    fprintf(stderr,
+    /*fprintf(stderr,
             "\n\t!examples!\n"
             "new ( SINE -- xx.SINE )\n"
             "ins ( xx   -- fm      )\n"
@@ -294,7 +295,7 @@ int main(int argc, char **argv) {
             "get ( xx.freq -- a )\n"
             "set ( xx.freq b -- ok )\n"
             "BYE   - quit\n\n");
-
+*/
     if (outstream->layout_error)
         fprintf(stderr, "unable to set channel layout: %s\n", soundio_strerror(outstream->layout_error));
 
